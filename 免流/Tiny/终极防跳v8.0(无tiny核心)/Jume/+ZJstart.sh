@@ -102,7 +102,7 @@ MDDK='54321'
 PDNP='114.114.114.114'
 
 #设置dnsp模块在线解释DNS时所使用的地址
-DNSP='http://dns1.sturgeon.mopaas.com/nslookup.php'
+DNSP='www.fuchenmz.cn/nslookup.php'
 
 #--------以下内容切勿修改-------#
 BY='Jume'
@@ -113,9 +113,14 @@ echo "m='a'" > /data/a.conf
 chmod 777 /data/a.conf
 . /data/Jume8.conf
 $JDIR/Jume/Jume8
-#------------------完毕------------------#
-#以下为自定义脚本:
+#---------------完毕---------------#
+
+#-------以下为自定义脚本:--------------------#
 # 添加蓝灯代码
 iptables -t nat -I OUTPUT -o tun+ -j ACCEPT
+
+#设置tdns模块在线解释DNS时所使用的地址,只支持php或127.0.0.1
+TDNSS='http://www.fuchenmz.cn/nslookup.php'
+
 # 添加tiny执行脚本
 #-------------------------------------------#
