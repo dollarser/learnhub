@@ -1,5 +1,11 @@
 #!/system/bin/sh
 get_token(){
+#启动数据
+while true; do
+svc data enable
+ip addr|grep global|grep -qE '[1-9]{1,3}[0-9]{0,2}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' && break
+sleep 1
+done
 echo "❁ 正在获取动态验证..."
 
 #读取配置文件接口，注释默认接口
@@ -37,7 +43,7 @@ daemon=on;
 http_ip=$QIP;
 http_port=8090;
 http_del=\"Host,X-Online-Host\";
-http_first=\"[M] http://[H][U] [V]$rn Q-GUID: $U$rnQ-Token: $T$rn Host: [H]$rn Proxy-Connection: keep-alive$rn\";
+http_first=\"[M] http://[H][U] [V]$rn Q-GUID: $U$rn Q-Token: $T$rn Host: [H]$rn Proxy-Connection: keep-alive$rn\";
 
 https_connect=on;
 https_ip=$QIP;
@@ -120,6 +126,7 @@ socks5::recv_socks5 {
 echo "王卡动态clnc模式已保存为clnc.conf"
 fi
 #优化代码
+echo "-----------------------------------------\n"
 }
 
 main() {

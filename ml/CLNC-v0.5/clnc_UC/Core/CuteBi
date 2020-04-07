@@ -150,6 +150,8 @@ statusCheck() {
 }
 
 clearServer() {
+    #关闭数据
+    #svc data disable
     #关闭程序
     ./clnc -k
     #清理ip路由规则

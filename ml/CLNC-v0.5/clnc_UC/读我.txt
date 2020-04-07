@@ -1,0 +1,24 @@
+标准目录结构
+clnc_UC
+    |_Core
+        |_clnc
+        |_CuteBi
+        |_clnc.pid(自动生成文件)
+        |_dns.cache(自动生成文件)
+    |_动态
+        |_config.ini
+        |_SP8-CRON_v2.tar.gz
+        |_token.sh
+        |_token_min.sh
+        |_wget
+        |_test.sh(无用文件)
+        |_README.md
+    |_config.ini
+    |_关闭.sh
+    |_检测.sh
+    |_开启.sh
+    |_读我.txt
+
+其中 动态 是模式自动生成模块，用于王卡动态免流
+	该脚本下的token.sh可以生成tiny模式或clnc模式，可直接手动执行
+	自动执行，需要解压SP8-CRON_v2.tar.gz，安装crontab定时任务脚本，来定时更新动态token
