@@ -1,0 +1,816 @@
+#!/system/bin/sh
+#加载执行操作指令
+if [[ -e "/data/a.conf" ]];then
+. /data/a.conf >/dev/null 2>&1
+else echo "没检测到需要执行的操作指令 ";fi
+#设置所采用的grep命令
+CGREP=`ps | grep 0` >/dev/null 2>&1
+if [[ $CGREP != ""  ]];then SGREP="grep"
+else SGREP="busybox grep";fi
+#a=启动防跳/b=关闭防跳/c=检测防跳
+#启动防跳************************************
+if [[ $m == "a" ]];then
+#加载终极防跳配置文件
+if [[ -e "/data/Jume8.conf" ]];then
+. /data/Jume8.conf >/dev/null 2>&1
+else echo "没检测到配置文件无法正常执行 ";fi
+#------------启动终极v8.0------------#
+#挂载系统目录读写权限
+mount -o remount,rw -t auto /data >/dev/null 2>&1
+mount -o remount,rw -t auto /system >/dev/null 2>&1
+#配置规则前自动关闭网络
+if [[ $ZDKG == "on" ]];then svc data disable >/dev/null 2>&1;fi
+#静默杀死运行中的模块方案1
+KU=`pgrep u2nl` >/dev/null 2>&1;for a in $KU;do kill -9 $a;done
+KD=`pgrep dnsp` >/dev/null 2>&1;for b in $KD;do kill -9 $b;done
+KT=`pgrep tdnsp` >/dev/null 2>&1;for c in $KT;do kill -9 $c;done
+KP=`pgrep pdnsd` >/dev/null 2>&1;for d in $KP;do kill -9 $d;done
+KH=`pgrep Hu2nl` >/dev/null 2>&1;for e in $KH;do kill -9 $e;done
+KI=`pgrep Hu2nl5` >/dev/null 2>&1;for f in $KI;do kill -9 $f;done
+KD=`pgrep tdnsp5` >/dev/null 2>&1;for g in $KD;do kill -9 $g;done
+KR=`pgrep redsocks` >/dev/null 2>&1;for h in $KR;do kill -9 $h;done
+KS=`pgrep redsocks5` >/dev/null 2>&1;for i in $KS;do kill -9 $i;done
+#静默杀死运行中的模块方案2
+killall -9 u2nl >/dev/null 2>&1
+killall -9 dnsp >/dev/null 2>&1
+killall -9 tdnsp >/dev/null 2>&1
+killall -9 pdnsd >/dev/null 2>&1
+killall -9 Hu2nl >/dev/null 2>&1
+killall -9 Hu2nl5 >/dev/null 2>&1
+killall -9 tdnsp5 >/dev/null 2>&1
+killall -9 redsocks >/dev/null 2>&1
+killall -9 redsocks5 >/dev/null 2>&1
+#静默杀死运行中的模块方案3（原创无需busybox支持关闭模块）
+Killmod()
+{
+rm /data/b.conf >/dev/null 2>&1
+touch /data/b.conf >/dev/null 2>&1
+Omod=`ps|grep $1|grep -v grep`
+for m in $Omod
+do echo "$m"  >>/data/b.conf;done
+chmod 777 /data/b.conf >/dev/null 2>&1
+ed /data/b.conf<<\EOF >/dev/null 2>&1
+1d
+2d
+2d
+2d
+2d
+2d
+2d
+2d
+2d
+w
+EOF
+while read PID >/dev/null 2>&1
+do kill -9 $PID >/dev/null 2>&1
+done < /data/b.conf >/dev/null 2>&1
+rm /data/b.conf >/dev/null 2>&1
+}
+Killmod u2nl
+Killmod dnsp
+Killmod pdnsd
+Killmod tdnsp
+Killmod Hu2nl
+Killmod Hu2nl5
+Killmod tdnsp5
+Killmod redsocks
+Killmod redsocks5
+#删除旧的模块配置文件
+rm /data/Jume8d.conf >/dev/null 2>&1
+rm /data/Jume8r.conf >/dev/null 2>&1
+#生成redsocks配置文件
+if [[ $CHTTPS == "redsocks" ]];then
+touch /data/Jume8r.conf >/dev/null 2>&1
+chmod 777 /data/Jume8r.conf >/dev/null 2>&1
+echo "base {
+    log_debug = off;
+    log_info = off;
+	log = stderr;
+    daemon = on;
+    redirector = iptables;
+}
+redsocks {
+    local_ip = 0.0.0.0;
+    local_port = $CHDK;
+    ip = $UIP;
+    port = $UDK;
+    type = http-connect;
+}" > /data/Jume8r.conf;fi
+#生成pdnsd配置文件
+if [[ $MDNS == "pdnsd" ]];then
+touch /data/Jume8d.conf >/dev/null 2>&1
+chmod 777 /data/Jume8d.conf >/dev/null 2>&1
+echo "global {
+ perm_cache = 2048;
+ cache_dir = "/data/pdnsd";
+ server_ip = 127.0.0.1;
+ server_port = $MDDK;
+ query_method = tcp_only;
+ run_ipv4 = on;
+ min_ttl = 24h;
+ max_ttl = 5w;
+ timeout = 10;
+ daemon = on;
+}
+server {
+ label = "root-servers";
+ ip = $PDNP;
+ timeout = 5;
+}
+rr {
+ name=localhost;
+ reverse=on;
+ a=127.0.0.1;
+ owner=localhost;
+ soa=localhost,root.localhost,42,86400,900,86400,86400;
+}" > /data/Jume8d.conf;fi
+#暂停0.1秒再继续执行防止iptables规则错乱(下同)
+sleep 0.1 >/dev/null 2>&1
+#启动选定的处理模块
+if [[ $CHTTPS == "u2nl" ]];then MHTTPS="on"
+$JDIR/Jume/u2nl $UIP $UDK $CHDK >/dev/null 2>&1 &
+elif [[ $CHTTPS == "Hu2nl" ]];then MHTTPS="on"
+$JDIR/Jume/Hu2nl -l $CHDK $UIP:$UDK >/dev/null 2>&1 &
+$JDIR/Jume/Hu2nl5 -l $CHDK $UIP:$UDK >/dev/null 2>&1 &
+elif [[ $CHTTPS == "redsocks" ]];then MHTTPS="on"
+$JDIR/Jume/redsocks -c /data/Jume8r.conf >/dev/null 2>&1 &
+$JDIR/Jume/redsocks5 -c /data/Jume8r.conf >/dev/null 2>&1 &
+fi
+if [[ $MDNS == "dnsp" ]];then
+$JDIR/Jume/dnsp -p $MDDK -l 127.0.0.1 -h $DIP -r $PORT -s $DNSP >/dev/null 2>&1 &
+elif [[ $MDNS == "tdnsp" ]];then
+$JDIR/Jume/tdnsp -l 127.0.0.1 -p $MDDK -h $DIP -r $PORT -s http://119.29.29.29/d >/dev/null 2>&1 &
+$JDIR/Jume/tdnsp5 -l 127.0.0.1 -p $MDDK -h $DIP -r $PORT -s http://119.29.29.29/d >/dev/null 2>&1 &
+elif [[ $MDNS == "pdnsd" ]];then
+$JDIR/Jume/pdnsd -c /data/Jume8d.conf >/dev/null 2>&1 &
+fi
+#------------设置本机规则------------#
+#清除终极防跳规则
+iptables -t nat -F OUTPUT
+iptables -t nat -F PREROUTING
+iptables -t mangle -F OUTPUT
+iptables -t mangle -F FORWARD
+iptables -t nat -F Jume8 >/dev/null 2>&1
+iptables -t nat -X Jume8 >/dev/null 2>&1
+iptables -t filter -D FORWARD -j DROP >/dev/null 2>&1
+iptables -t nat -D POSTROUTING -j MASQUERADE >/dev/null 2>&1
+iptables -t mangle -D PREROUTING -s 192.168.0.0/16 -f -j DROP >/dev/null 2>&1
+sleep 0.1 >/dev/null 2>&1
+#设定预设规则
+iptables -t nat -P PREROUTING ACCEPT >/dev/null 2>&1
+iptables -t nat -P OUTPUT ACCEPT >/dev/null 2>&1
+iptables -t mangle -P PREROUTING ACCEPT >/dev/null 2>&1
+iptables -t mangle -P OUTPUT >/dev/null 2>&1
+#判断终极防跳v8规则清除状况
+echo " "
+echo "---------------------"
+echo "o 启动终极防跳…"
+CDNAT=`iptables -nL -t nat | $SGREP DNAT | $SGREP tcp` >/dev/null 2>&1
+if [[ $CDNAT != "" ]]
+then echo "x 清除旧规则链失败!请查明原因! "
+else echo "o 清除旧规则链…";fi
+echo "o 配置新规则链…"
+iptables -t nat -N Jume8
+#自动判断是否使用直连代理
+if [[ $DIP == "127.0.0.1" ]];then :;else ZLGX="on";fi
+#设置指定端口走回全局规则方法(直连/A/B)
+if [[ $GXMOE == "A1" ]];then GCMOE="A"
+PDNATIP="192.168.43.1"
+elif [[ $GXMOE == "A2" ]];then GCMOE="A"
+PDNATIP="192.168.42.129"
+elif [[ $GXMOE == "A3" ]];then GCMOE="A"
+PDNATIP="192.168.1.1";fi
+if [[ $ZLGX == "on" ]]
+then GPORT="DNAT --to-destination $DIP:$PORT"
+elif [[ $GCMOE == "A" ]]
+then GPORT="DNAT --to-destination $PDNATIP:$PORT"
+else GPORT="REDIRECT --to-ports $PORT";fi
+#TCP处理模块填on开启HTTPS转发
+if [[ $CHTTPS == "on" ]];then MHTTPS="on";fi
+#设置指定端口走回全局代理
+for tdd in $TDK
+do if [[ tdd != ""  ]];then
+iptables -t nat -A OUTPUT -p 6 --dport $tdd -j DNAT --to $DIP:$PORT;fi
+done
+for tddb in $TDK
+do if [[ tddb != "" && $GXMM == "on" ]];then
+iptables -t nat -A PREROUTING -p 6 --dport $tddb -j $GPORT;fi
+done
+sleep 0.1 >/dev/null 2>&1
+#配置本机防跳规则
+if [[ $MHTTPS == "on" ]];then
+iptables -t nat -A OUTPUT -p 6 --dport 80 -j DNAT --to-destination $DIP:$PORT
+iptables -t nat -A OUTPUT -p 6 -j DNAT --to-destination 127.0.0.1:$CHDK
+else iptables -t nat -A OUTPUT -p 6 -j DNAT --to-destination $DIP:$PORT;fi
+if [[ $ZLGX == "on" ]];then
+if [[ $FXUDP == "on" ]];then :
+else iptables -t nat -A OUTPUT -p 17 -j DNAT --to-destination $DIP:$PORT;fi;fi
+if [[ $FXUDP == "on" ]];then
+iptables -t nat -A OUTPUT -p 17 -j ACCEPT;fi
+iptables -t nat -A OUTPUT -j DNAT --to-destination 127.0.0.1
+#放行QQ视频接听
+for quud in $QUID
+do if [[ quud != ""  ]];then
+if [[ $QQML == "on" && $BY == "Jume" ]];then :
+else iptables -t nat -I OUTPUT -p 17 --dport 8000 -m owner --uid-owner $quud -j ACCEPT
+iptables -t nat -I OUTPUT -p 17 --dport 16001 -m owner --uid-owner $quud -j ACCEPT;fi;fi
+done
+#------------设置应用规则------------#
+#设置半代理应用
+for bdl in $UID1
+do if [[ bdl != "" ]];then
+iptables -t nat -I OUTPUT -p 6 --dport 80 -m owner --uid-owner $bdl -j DNAT --to-destination $DIP:$PORT >/dev/null 2>&1
+#------开启备用设置半代理应用 
+JCUID1b=`iptables -nL -t nat | $SGREP DNAT | $SGREP tcp | $SGREP UID | $SGREP 80` >/dev/null 2>&1
+if [[ $JCUID1b != "" ]];then :;else
+iptables -t nat -I OUTPUT -p 6 -m owner --uid-owner $bdl --dport 80 -j DNAT --to-destination $DIP:$PORT;fi
+iptables -t nat -I OUTPUT -m owner --uid-owner $bdl -j ACCEPT;fi
+done
+#设置不代理应用
+for bud in $UID2
+do if [[ bud != "" ]]
+then iptables -t nat -I OUTPUT -m owner --uid-owner $bud -j ACCEPT;fi
+done
+#设置禁网应用
+for jiw in $UID3
+do if [[ jiw != "" ]]
+then iptables -t mangle -A OUTPUT -m owner --uid-owner $jiw -j DROP;fi
+done
+#设置放行UDP应用
+for fudp in $UID4
+do if [[ fudp != "" ]]
+then iptables -t nat -I OUTPUT -p 17 -m owner --uid-owner $fudp -j ACCEPT;fi
+done
+#设置放行HTTPS应用
+for fhts in $UID5
+do if [[ fhts != "" ]]
+then iptables -t nat -I OUTPUT -p 6 --dport 443 -m owner --uid-owner $fhts -j ACCEPT >/dev/null 2>&1
+#------开启备用设置放行HTTPS应用
+CAUIDHa=`iptables -nL -t nat | $SGREP ACCEPT | $SGREP UID | $SGREP 443` >/dev/null 2>&1
+if [[ $CAUIDHa != "" ]];then :;else
+iptables -t nat -I OUTPUT -p 6 -m owner --uid-owner $fhts --dport 443 -j ACCEPT;fi;fi
+done
+sleep 0.1 >/dev/null 2>&1
+#放行本机TCP端口
+for btcp in $BTCP
+do if [[ $btcp != "" ]]
+then iptables -t nat -I OUTPUT -p 6 --dport $btcp -j ACCEPT;fi
+done
+#放行本机UDP端口
+for budp in $BUDP
+do if [[ $budp != "" ]]
+then iptables -t nat -I OUTPUT -p 17 --dport $budp -j ACCEPT;fi
+done
+##放行本机HTTPS
+if [[ $FHTTPS == "on" ]]
+then iptables -t nat -I OUTPUT -p 6 --dport 443 -j ACCEPT;fi
+#设置本机DNS解释
+if [[ $DNSIP != "" ]]
+then DDNS="DNAT --to-destination $DNSIP:53"
+else DDNS="ACCEPT";fi
+if [[ $MDNS == "dnsp" ]]
+then DDNS="DNAT --to-destination 127.0.0.1:$MDDK"
+elif [[ $MDNS == "tdnsp" ]]
+then DDNS="DNAT --to-destination 127.0.0.1:$MDDK"
+elif [[ $MDNS == "pdnsd" ]]
+then DDNS="DNAT --to-destination 127.0.0.1:$MDDK"
+elif [[ $MDNS == "on" ]]
+then DDNS="DNAT --to-destination 127.0.0.1:$MDDK";fi
+if [[ $FDNS == "on" ]]
+then iptables -t nat -I OUTPUT -p 17 --dport 53 -j $DDNS;fi
+#设置放行全局代理应用
+for uida in $UID0
+do if [[ uida != "" ]]
+then iptables -t nat -I OUTPUT -p 6 -m owner --uid-owner $uida -j ACCEPT;fi
+done
+#丢弃非法连接
+iptables -t mangle -I FORWARD -m state --state INVALID -j DROP >/dev/null 2>&1
+iptables -t mangle -I OUTPUT -m state --state INVALID -j DROP >/dev/null 2>&1
+#防止部分设备共享网络不能获取IP地址
+iptables -t nat -I OUTPUT -d 255.255.255.255 -j ACCEPT
+#自动放行所有使用WIFI传输的应用
+iptables -t mangle -I OUTPUT -d 192.168.0.0/16 -j ACCEPT
+iptables -t nat -I OUTPUT -d 192.168.0.0/16 -j ACCEPT
+#自动放行WIFI网络
+if [[ $ZFWIFI == "on" ]];then
+iptables -t mangle -I OUTPUT -s 192.168.0.0/16 -j ACCEPT
+iptables -t nat -I OUTPUT -s 192.168.0.0/16 -j ACCEPT;fi
+#允许本地回环接口
+iptables -t mangle -I OUTPUT -d 127.0.0.0/8 -j ACCEPT
+iptables -t nat -I OUTPUT -d 127.0.0.0/8 -j ACCEPT
+iptables -t mangle -I OUTPUT -o lo -j ACCEPT
+iptables -t nat -I OUTPUT -o lo -j ACCEPT
+#放行WIFI网卡联网
+for wifif in $WIFIF
+do if [[ $wifif != "" ]];then
+iptables -t mangle -I OUTPUT -o $wifif -j ACCEPT
+iptables -t nat -I OUTPUT -o $wifif -j ACCEPT;fi
+done
+sleep 0.1 >/dev/null 2>&1
+#------------设置共享规则------------#
+#设置共享防跳规则A
+if [[ $GCMOE == "A" && $GXMM == "on" && $BY == "Jume" ]];then
+echo "1"  > /proc/sys/net/ipv4/ip_forward
+iptables -t nat -A POSTROUTING -j MASQUERADE
+iptables -t mangle -I PREROUTING -s 192.168.0.0/16 -f -j DROP
+if [[ $ZLGX == "on" && $MHTTPS == "on" ]];then
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 6 --dport 80 -j DNAT --to-destination $DIP:$PORT
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 6 -j DNAT --to-destination $PDNATIP:$CHDK
+elif [[ $MHTTPS == "on" ]];then
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 6 --dport 80 -j DNAT --to-destination $PDNATIP:$PORT
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 6 -j DNAT --to-destination $PDNATIP:$CHDK
+elif [[ $ZLGX == "on" ]];then
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 6 -j DNAT --to-destination $DIP:$PORT
+else iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 6 -j DNAT --to-destination $PDNATIP:$PORT;fi
+if [[ $ZLGX == "on" ]];then
+if [[ $GFUDP == "on" ]];then :
+else iptables -t nat -A PREROUTING -p 17 -j DNAT --to-destination $DIP:$PORT;fi;fi
+if [[ $GFUDP == "on" ]];then
+iptables -t nat -A PREROUTING -p 17 -j ACCEPT;fi
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 1 -j DNAT --to-destination $PDNATIP:8
+iptables -t nat -A PREROUTING -s 192.168.0.0/16  -j DNAT --to-destination 127.0.0.1 >/dev/null 2>&1;fi
+#设置共享防跳规则B
+if [[ $GXMOE == "B" && $GXMM == "on" && $BY == "Jume" ]];then
+echo "1"  > /proc/sys/net/ipv4/ip_forward
+iptables -t nat -A POSTROUTING -j MASQUERADE
+iptables -t mangle -I PREROUTING -s 192.168.0.0/16 -f -j DROP
+if [[ $ZLGX == "on" && $MHTTPS == "on" ]];then
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 6 --dport 80 -j DNAT --to-destination $DIP:$PORT
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 6 -j REDIRECT --to-ports $CHDK
+elif [[ $MHTTPS == "on" ]];then
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 6 --dport 80 -j REDIRECT --to-ports $PORT
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 6 -j REDIRECT --to-ports $CHDK
+elif [[ $ZLGX == "on" ]];then 
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 6 -j DNAT --to-destination $DIP:$PORT
+else iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 6 -j REDIRECT --to-ports $PORT;fi
+if [[ $ZLGX == "on" ]];then
+if [[ $GFUDP == "on" ]];then :
+else iptables -t nat -A PREROUTING -p 17 -j DNAT --to-destination $DIP:$PORT;fi;fi
+if [[ $GFUDP == "on" ]];then
+iptables -t nat -A PREROUTING -p 17 -j ACCEPT;fi
+iptables -t nat -A PREROUTING -s 192.168.0.0/16 -p 1 -j REDIRECT --to-ports 8
+iptables -t nat -A PREROUTING -s 192.168.0.0/16  -j DNAT --to-destination 127.0.0.1 >/dev/null 2>&1;fi
+#放行共享TCP端口
+for gttp in $GTCP
+do if [[ $gttp != "" ]]
+then iptables -t nat -I PREROUTING -p 6 --dport $gttp -j ACCEPT;fi
+done
+#放行共享UDP端口
+for guup in $GUDP
+do if [[ $guup != "" ]]
+then iptables -t nat -I PREROUTING -p 17 --dport $guup -j ACCEPT;fi
+done
+#放行共享HTTPS
+if [[ $GHTTPS == "on" ]]
+then iptables -t nat -I PREROUTING -p 6 --dport 443 -j ACCEPT;fi
+#放行共享DNS解释
+if [[ $GDNS == "on" ]]
+then iptables -t nat -I PREROUTING -s 192.168.0.0/16 -p 17 --dport 53 -j ACCEPT;fi
+#防止部分设备共享网络不能获取IP地址
+iptables -t nat -I PREROUTING -d 255.255.255.255 -j ACCEPT
+#自动放行所有使用WIFI传输的应用
+iptables -t nat -I PREROUTING -d 192.168.0.0/16 -j ACCEPT
+#防止共享网络不经代理
+if [[ $FZGX == "on" ]]
+then iptables -t mangle -I FORWARD -j DROP >/dev/null 2>&1
+iptables -t filter -I FORWARD -j DROP >/dev/null 2>&1;fi
+#防止使用单脚本直连共享时无网络
+if [[ $ZLGX == "on" && $GXMM == "on" ]]
+then iptables -t mangle -D FORWARD -j DROP >/dev/null 2>&1
+iptables -t filter -D FORWARD -j DROP >/dev/null 2>&1;fi
+#-------------------完毕-------------------#
+sleep 0.1 >/dev/null 2>&1
+#------检测防跳状态并显示-------#
+#检测全局UID放行状况
+CAUIDc=`iptables -nL -t nat | $SGREP ACCEPT | $SGREP UID` >/dev/null 2>&1
+if [[ $CAUIDc != "" ]]
+then echo "o 放行全局UID: $UID0"
+else echo "x 放行全局UID: $UID0";fi
+#检测配置代理IP规则状态
+CDIP=`iptables -nL -t nat | $SGREP DNAT | $SGREP tcp` >/dev/null 2>&1
+if [[ $CDIP != "" ]]
+then echo "o 设置代理IP: $DIP:$PORT "
+else echo "x 未设代理IP: $DIP:$PORT ";fi
+#检测DNS放行状态
+if [[ $FDNS == "on" ]];then :
+else echo "o 不开启DNS解释联网将受到限制";fi
+if [[ $GDNS == "on" ]];then :
+else echo "o 不开启共享DNS解释联网将受到限制";fi
+#检测共享规则开关状况
+if [[ $GXMM == "on" ]];then :
+else echo "o 不开启共享免设代理直接共享则不代理 ";fi
+if [[ $GXMM="on" ]];then
+if [[ $GCMOE == "A" ]];then :
+elif [[ $GXMOE == "B" ]];then :
+else echo "o 不开启共享免设代理直接共享则不代理 ";fi;fi
+#检测共享规则配置状况
+if [[ $GCMOE == "A" && $GXMM == "on" && $BY == "Jume" ]]
+then JCGXA=`iptables -nL -t nat | $SGREP DNAT | $SGREP tcp | $SGREP 192.168` >/dev/null 2>&1
+if [[ $JCGXA != "" ]]
+then echo "o 启用"$GXMOE"共享免设规则成功"
+else echo "x 不支持A共享规则直接共享则不代理 ";fi;fi
+if [[ $GXMOE == "B" && $GXMM == "on" && $BY == "Jume" ]]
+then JCGXB=`iptables -nL -t nat | $SGREP REDIRECT` >/dev/null 2>&1
+if [[ $JCGXB != "" ]]
+then echo "o 启用"$GXMOE"共享免设规则成功"
+else echo "x 不支持B共享规则直接共享则不代理 ";fi;fi
+#检测busybox是否正常
+CBBOX=`busybox --help` >/dev/null 2>&1
+if [[ $CBBOX != "" ]];then :
+else echo "o busybox未装可能影响使用";fi
+#检测iptables是否正常
+CIES=`iptables -V` >/dev/null 2>&1
+if [[ $CIES != "" ]];then :
+else echo "x iptables似乎有问题请查证";fi
+#检测终极防跳v8规则配置状态
+CJumeb=`iptables -nL -t nat | $SGREP Jume8` >/dev/null 2>&1
+if [[ $CJumeb != "" ]]
+then if [[ $CDIP != "" ]]
+then echo "o 终极防跳v8规则链配置成功";fi
+else echo "x 终极防跳v8规则链配置失败";fi
+#判断变量是否有值并显示配置状态
+if [[ $UID1 != "" ]]
+then echo " ";echo "---------------------"
+elif [[ $UID2 != "" ]]
+then echo " ";echo "---------------------"
+elif [[ $UID3 != "" ]]
+then echo " ";echo "---------------------"
+elif [[ $UID4 != "" ]]
+then echo " ";echo "---------------------"
+elif [[ $UID5 != "" ]]
+then echo " ";echo "---------------------"
+elif [[ $BTCP != "" ]]
+then echo " ";echo "---------------------"
+elif [[ $BUDP != "" ]]
+then echo " ";echo "---------------------"
+elif [[ $GTCP != "" ]]
+then echo " ";echo "---------------------"
+elif [[ $GUDP != "" ]]
+then echo " ";echo "---------------------";fi
+#判断半代理应用配置状态
+if [[ $UID1 != "" ]]
+then JCUID1=`iptables -nL -t nat | $SGREP ACCEPT | $SGREP all | $SGREP UID` >/dev/null 2>&1
+JCUID1a=`iptables -nL -t nat | $SGREP DNAT | $SGREP tcp | $SGREP UID | $SGREP 80` >/dev/null 2>&1
+if [[ $JCUID1 != "" ]]
+then if [[ $JCUID1a != "" ]]
+then echo "o 半代理uid -> [$UID1] "
+else echo "x 半代理uid -> [$UID1] ";fi
+else echo "x 半代理uid -> [$UID1] ";fi;fi
+#判断不代理应用配置状态
+if [[ $UID2 != "" ]]
+then JCUID2=`iptables -nL -t nat | $SGREP ACCEPT | $SGREP all | $SGREP UID` >/dev/null 2>&1
+if [[ $JCUID2 != "" ]]
+then echo "o 不代理uid -> [$UID2] "
+else echo "x 不代理uid -> [$UID2] ";fi;fi
+#判断禁联网应用配置状态
+if [[ $UID3 != "" ]]
+then JCUID3=`iptables -nL -t mangle | $SGREP DROP | $SGREP all | $SGREP UID` >/dev/null 2>&1
+if [[ $JCUID3 != "" ]]
+then echo "o 禁联网uid -> [$UID3] "
+else echo "x 禁联网uid -> [$UID3] ";fi;fi
+#判断放行UDP应用配置状态
+if [[ $UID4 != "" ]]
+then JCUID4=`iptables -nL -t nat | $SGREP ACCEPT | $SGREP udp | $SGREP UID` >/dev/null 2>&1
+if [[ $JCUID4 != "" ]]
+then echo "o UDP放行uid -> [$UID4] "
+else echo "x UDP放行uid -> [$UID4] ";fi;fi
+#判断放行HTTPS应用配置状态
+if [[ $UID5 != "" ]]
+then JCUID5=`iptables -nL -t nat | $SGREP ACCEPT | $SGREP tcp | $SGREP UID | $SGREP 443` >/dev/null 2>&1
+if [[ $JCUID5 != "" ]]
+then echo "o HTTPS放行uid -> [$UID5] "
+else echo "x HTTPS放行uid -> [$UID5] ";fi;fi
+#判断放行本机TCP端口配置状态
+if [[ $BTCP != "" ]]
+then JCBTCP=`iptables -nL -t nat | $SGREP ACCEPT | $SGREP tcp | $SGREP dpt` >/dev/null 2>&1
+if [[ $JCBTCP != "" ]]
+then echo "o 本机TCP放行端口 -> [$BTCP] "
+else echo "x 本机TCP放行端口 -> [$BTCP] ";fi;fi
+#判断放行本机UDP端口配置状态
+if [[ $BUDP != "" ]]
+then JCBUDP=`iptables -nL -t nat | $SGREP ACCEPT | $SGREP udp | $SGREP dpt` >/dev/null 2>&1
+if [[ $JCBUDP != "" ]]
+then echo "o 本机UDP放行端口 -> [$BUDP] "
+else echo "x 本机UDP放行端口 -> [$BUDP] ";fi;fi
+#判断放行共享TCP端口配置状态
+if [[ $GTCP != "" ]]
+then JCGTCP=`iptables -nL -t nat | $SGREP ACCEPT | $SGREP tcp | $SGREP dpt` >/dev/null 2>&1
+if [[ $JCGTCP != "" ]]
+then echo "o 共享TCP放行端口 -> [$GTCP] "
+else echo "x 共享TCP放行端口 -> [$GTCP] ";fi;fi
+#判断放行共享UDP端口配置状态
+if [[ $GUDP != "" ]]
+then JCGUDP=`iptables -nL -t nat | $SGREP ACCEPT | $SGREP udp | $SGREP dpt` >/dev/null 2>&1
+if [[ $JCGUDP != "" ]]
+then echo "o 共享UDP放行端口 -> [$GUDP] "
+else echo "x 共享UDP放行端口 -> [$GUDP] ";fi;fi
+sleep 0.1 >/dev/null 2>&1
+echo " "
+echo "---------------------"
+#检测模块运行状态方案1
+ZFDNS="x"
+ZFHTTPS="x"
+Cdnsp=`ps | grep dnsp | grep -v grep` >/dev/null 2>&1
+Ctdnsp=`ps | grep tdnsp | grep -v grep` >/dev/null 2>&1
+Cpdnsd=`ps | grep pdnsd | grep -v grep` >/dev/null 2>&1
+Cu2nl=`ps | grep u2nl | grep -v grep` >/dev/null 2>&1
+CHu2nl=`ps | grep Hu2nl | grep -v grep` >/dev/null 2>&1
+Credsocks=`ps | grep redsocks | grep -v grep` >/dev/null 2>&1
+if [[ $Cdnsp != "" ]];then if [[ $Ctdnsp != "" ]];then :
+else ZFDNS="dnsp";fi;fi
+if [[ $Ctdnsp != "" ]];then ZFDNS="tdnsp";fi
+if [[ $Cpdnsd != "" ]];then ZFDNS="pdnsd";fi
+if [[ $Cu2nl != "" ]];then if [[ $CHu2nl != "" ]];then :
+else ZFHTTPS="u2nl";fi;fi
+if [[ $CHu2nl != "" ]];then ZFHTTPS="Hu2nl";fi
+if [[ $Credsocks != "" ]];then ZFHTTPS="redsocks";fi
+#检测模块运行状态方案2
+if [[ $ZFDNS == "x" ]]
+then Cdnspb=`pgrep dnsp` >/dev/null 2>&1
+Ctdnspb=`pgrep tdnsp` >/dev/null 2>&1
+Cpdnsdb=`pgrep pdnsd` >/dev/null 2>&1
+if [[ $Cdnspb != "" ]];then if [[ $Ctdnspb != "" ]];then :
+else ZFDNS="dnsp";fi;fi
+if [[ $Ctdnspb != "" ]];then ZFDNS="tdnsp";fi
+if [[ $Cpdnsdb != "" ]];then ZFDNS="pdnsd";fi;fi
+if [[ $ZFHTTPS == "x" ]]
+then Cu2nlb=`pgrep u2nl` >/dev/null 2>&1
+CHu2nlb=`pgrep Hu2nl` >/dev/null 2>&1
+Credsocksb=`pgrep redsocks` >/dev/null 2>&1
+if [[ $Cu2nlb != "" ]];then if [[ $CHu2nlb != "" ]];then :
+else ZFHTTPS="u2nl";fi;fi
+if [[ $CHu2nlb != "" ]];then ZFHTTPS="Hu2nl";fi
+if [[ $Credsocksb != "" ]];then ZFHTTPS="redsocks";fi;fi
+#检测模块运行状态方案3
+if [[ $ZFDNS == "x" && $BY == "Jume" ]]
+then if [[ $MDNS == "dnsp" ]];then :
+elif [[ $MDNS == "tdnsp" ]];then :
+elif [[ $MDNS == "pdnsd" ]];then :
+else ZFDNS="已关闭";fi
+if [[ $FDNS == "on" ]];then :
+else ZFDNS="已关闭";fi;fi
+if [[ $ZFHTTPS == "x" && $BY == "Jume" ]]
+then if [[ $CHTTPS == "u2nl" ]];then :
+elif [[ $CHTTPS == "Hu2nl" ]];then :
+elif [[ $CHTTPS == "redsocks" ]];then :
+else ZFHTTPS="已关闭";fi;fi
+if [[ $MDNS == "on" && $BY == "Jume" ]]
+then ZFDNS="只转发到端口:$MDDK ";fi
+if [[ $CHTTPS == "on" && $BY == "Jume" ]]
+then ZFHTTPS="只转发到端口:$CHDK ";fi
+#输出模块运行状态显示
+if [[ $ZFDNS == "x" ]];then SZFDNS="x"
+ZFDNS="$MDNS启动失败"
+else SZFDNS="o";fi
+if [[ $ZFHTTPS == "x" ]];then SZFHTTPS="x"
+ZFHTTPS="$CHTTPS启动失败"
+else SZFHTTPS="o";fi
+echo "$SZFDNS dns转发 -> $ZFDNS "
+echo "$SZFHTTPS https转发 -> $ZFHTTPS "
+echo " "
+echo "---------------------"
+echo "终极防跳使用完全免费，禁止盗版！ "
+echo "-By Jume"
+#配置规则后自动开启网络
+if [[ $ZDKG == "on" ]];then svc data enable >/dev/null 2>&1;fi
+fi
+#关闭防跳*************************************
+if [[ $m == "b" ]];then
+#关闭防跳自动关闭网络
+if [[ $a == "on" ]];then svc data disable >/dev/null 2>&1;fi
+#静默杀死运行中的模块方案1
+KU=`pgrep u2nl` >/dev/null 2>&1;for a in $KU;do kill -9 $a;done
+KD=`pgrep dnsp` >/dev/null 2>&1;for b in $KD;do kill -9 $b;done
+KT=`pgrep tdnsp` >/dev/null 2>&1;for c in $KT;do kill -9 $c;done
+KP=`pgrep pdnsd` >/dev/null 2>&1;for d in $KP;do kill -9 $d;done
+KH=`pgrep Hu2nl` >/dev/null 2>&1;for e in $KH;do kill -9 $e;done
+KI=`pgrep Hu2nl5` >/dev/null 2>&1;for f in $KI;do kill -9 $f;done
+KD=`pgrep tdnsp5` >/dev/null 2>&1;for g in $KD;do kill -9 $g;done
+KR=`pgrep redsocks` >/dev/null 2>&1;for h in $KR;do kill -9 $h;done
+KS=`pgrep redsocks5` >/dev/null 2>&1;for i in $KS;do kill -9 $i;done
+#静默杀死运行中的模块方案2
+killall -9 u2nl >/dev/null 2>&1
+killall -9 dnsp >/dev/null 2>&1
+killall -9 tdnsp >/dev/null 2>&1
+killall -9 pdnsd >/dev/null 2>&1
+killall -9 Hu2nl >/dev/null 2>&1
+killall -9 Hu2nl5 >/dev/null 2>&1
+killall -9 tdnsp5 >/dev/null 2>&1
+killall -9 redsocks >/dev/null 2>&1
+killall -9 redsocks5 >/dev/null 2>&1
+#静默杀死运行中的模块方案3（原创无需busybox支持关闭模块）
+Killmod()
+{
+rm /data/b.conf >/dev/null 2>&1
+touch /data/b.conf >/dev/null 2>&1
+Omod=`ps|grep $1|grep -v grep`
+for m in $Omod
+do echo "$m"  >>/data/b.conf;done
+chmod 777 /data/b.conf >/dev/null 2>&1
+ed /data/b.conf<<\EOF >/dev/null 2>&1
+1d
+2d
+2d
+2d
+2d
+2d
+2d
+2d
+2d
+w
+EOF
+while read PID >/dev/null 2>&1
+do kill -9 $PID >/dev/null 2>&1
+done < /data/b.conf >/dev/null 2>&1
+rm /data/b.conf >/dev/null 2>&1
+}
+Killmod u2nl
+Killmod dnsp
+Killmod pdnsd
+Killmod tdnsp
+Killmod Hu2nl
+Killmod Hu2nl5
+Killmod tdnsp5
+Killmod redsocks
+Killmod redsocks5
+#删除模块配置文件
+rm /data/Jume8d.conf >/dev/null 2>&1
+rm /data/Jume8r.conf >/dev/null 2>&1
+#清除终极防跳规则
+iptables -t nat -F OUTPUT
+iptables -t nat -F PREROUTING
+iptables -t mangle -F OUTPUT
+iptables -t mangle -F FORWARD
+iptables -t nat -F Jume8 >/dev/null 2>&1
+iptables -t nat -X Jume8 >/dev/null 2>&1
+iptables -t filter -D FORWARD -j DROP >/dev/null 2>&1
+iptables -t nat -D POSTROUTING -j MASQUERADE >/dev/null 2>&1
+iptables -t mangle -D PREROUTING -s 192.168.0.0/16 -f -j DROP >/dev/null 2>&1
+sleep 0.1 >/dev/null 2>&1
+#恢复动态IP地址伪装
+iptables -t nat -A POSTROUTING -j MASQUERADE
+#设定预设规则防止个别关闭后无网
+iptables -t nat -P PREROUTING ACCEPT >/dev/null 2>&1
+iptables -t nat -P INPUT ACCEPT >/dev/null 2>&1
+iptables -t nat -P OUTPUT ACCEPT >/dev/null 2>&1
+iptables -t nat -P POSTROUTING ACCEPT >/dev/null 2>&1
+iptables -t mangle -P PREROUTING ACCEPT >/dev/null 2>&1
+iptables -t mangle -P INPUT ACCEPT >/dev/null 2>&1
+iptables -t mangle -P FORWARD ACCEPT >/dev/null 2>&1
+iptables -t mangle -P OUTPUT ACCEPT >/dev/null 2>&1
+iptables -t mangle -P POSTROUTING ACCEPT >/dev/null 2>&1
+#检测终极防跳清除状态
+CDNAT=`iptables -nL -t nat | $SGREP DNAT | $SGREP tcp` >/dev/null 2>&1
+echo " "
+echo "---------------------"
+if [[ $CDNAT != "" ]]
+then echo "x 终极防跳v8 -> 清除失败 "
+else echo "o 终极防跳v8 -> 清除成功 ";fi
+echo "---------------------"
+#检测模块运行状态方案1
+ZFDNS="x"
+ZFHTTPS="x"
+Cdnsp=`ps | grep dnsp | grep -v grep` >/dev/null 2>&1
+Ctdnsp=`ps | grep tdnsp | grep -v grep` >/dev/null 2>&1
+Cpdnsd=`ps | grep pdnsd | grep -v grep` >/dev/null 2>&1
+Cu2nl=`ps | grep u2nl | grep -v grep` >/dev/null 2>&1
+CHu2nl=`ps | grep Hu2nl | grep -v grep` >/dev/null 2>&1
+Credsocks=`ps | grep redsocks | grep -v grep` >/dev/null 2>&1
+if [[ $Cdnsp != "" ]];then if [[ $Ctdnsp != "" ]];then :
+else ZFDNS="dnsp";fi;fi
+if [[ $Ctdnsp != "" ]];then ZFDNS="tdnsp";fi
+if [[ $Cpdnsd != "" ]];then ZFDNS="pdnsd";fi
+if [[ $Cu2nl != "" ]];then if [[ $CHu2nl != "" ]];then :
+else ZFHTTPS="u2nl";fi;fi
+if [[ $CHu2nl != "" ]];then ZFHTTPS="Hu2nl";fi
+if [[ $Credsocks != "" ]];then ZFHTTPS="redsocks";fi
+#检测模块运行状态方案2
+if [[ $ZFDNS == "x" ]]
+then Cdnspb=`pgrep dnsp` >/dev/null 2>&1
+Ctdnspb=`pgrep tdnsp` >/dev/null 2>&1
+Cpdnsdb=`pgrep pdnsd` >/dev/null 2>&1
+if [[ $Cdnspb != "" ]];then if [[ $Ctdnspb != "" ]];then :
+else ZFDNS="dnsp";fi;fi
+if [[ $Ctdnspb != "" ]];then ZFDNS="tdnsp";fi
+if [[ $Cpdnsdb != "" ]];then ZFDNS="pdnsd";fi;fi
+if [[ $ZFHTTPS == "x" ]]
+then Cu2nlb=`pgrep u2nl` >/dev/null 2>&1
+CHu2nlb=`pgrep Hu2nl` >/dev/null 2>&1
+Credsocksb=`pgrep redsocks` >/dev/null 2>&1
+if [[ $Cu2nlb != "" ]];then if [[ $CHu2nlb != "" ]];then :
+else ZFHTTPS="u2nl";fi;fi
+if [[ $CHu2nlb != "" ]];then ZFHTTPS="Hu2nl";fi
+if [[ $Credsocksb != "" ]];then ZFHTTPS="redsocks";fi;fi
+#输出模块运行状态显示
+if [[ $ZFDNS == "x" ]];then SZFDNS="o"
+ZFDNS="已关闭"
+else SZFDNS="x";fi
+if [[ $ZFHTTPS == "x" ]];then SZFHTTPS="o"
+ZFHTTPS="已关闭"
+else SZFHTTPS="x";fi
+echo "$SZFDNS dns转发 -> $ZFDNS "
+echo "$SZFHTTPS https转发 -> $ZFHTTPS "
+echo "---------------------"
+fi
+#检测防跳************************************
+if [[ $m == "c" ]];then
+#加载终极防跳配置文件
+CONF="/data/Jume8.conf"
+if [[ -e "$CONF" ]];then
+. /data/Jume8.conf >/dev/null 2>&1;fi
+#检测终极防跳运行状态
+RCJume=`iptables -nL -t nat | $SGREP Jume8` >/dev/null 2>&1
+RCDNAT=`iptables -nL -t nat | $SGREP DNAT | $SGREP tcp` >/dev/null 2>&1
+echo " "
+echo "---------------------"
+if [[ $RCJume != "" ]]
+then if [[ $RCDNAT != "" ]]
+then echo "o 终极防跳v8 -> 已运行 "
+else echo "x 终极防跳v8 -> 未运行 ";fi
+else echo "x 终极防跳v8 -> 未运行 ";fi
+echo "---------------------"
+#检测模块运行状态方案1
+ZFDNS="x"
+ZFHTTPS="x"
+Cdnsp=`ps | grep dnsp | grep -v grep` >/dev/null 2>&1
+Ctdnsp=`ps | grep tdnsp | grep -v grep` >/dev/null 2>&1
+Cpdnsd=`ps | grep pdnsd | grep -v grep` >/dev/null 2>&1
+Cu2nl=`ps | grep u2nl | grep -v grep` >/dev/null 2>&1
+CHu2nl=`ps | grep Hu2nl | grep -v grep` >/dev/null 2>&1
+Credsocks=`ps | grep redsocks | grep -v grep` >/dev/null 2>&1
+if [[ $Cdnsp != "" ]];then if [[ $Ctdnsp != "" ]];then :
+else ZFDNS="dnsp";fi;fi
+if [[ $Ctdnsp != "" ]];then ZFDNS="tdnsp";fi
+if [[ $Cpdnsd != "" ]];then ZFDNS="pdnsd";fi
+if [[ $Cu2nl != "" ]];then if [[ $CHu2nl != "" ]];then :
+else ZFHTTPS="u2nl";fi;fi
+if [[ $CHu2nl != "" ]];then ZFHTTPS="Hu2nl";fi
+if [[ $Credsocks != "" ]];then ZFHTTPS="redsocks";fi
+#检测模块运行状态方案2
+if [[ $ZFDNS == "x" ]]
+then Cdnspb=`pgrep dnsp` >/dev/null 2>&1
+Ctdnspb=`pgrep tdnsp` >/dev/null 2>&1
+Cpdnsdb=`pgrep pdnsd` >/dev/null 2>&1
+if [[ $Cdnspb != "" ]];then if [[ $Ctdnspb != "" ]];then :
+else ZFDNS="dnsp";fi;fi
+if [[ $Ctdnspb != "" ]];then ZFDNS="tdnsp";fi
+if [[ $Cpdnsdb != "" ]];then ZFDNS="pdnsd";fi;fi
+if [[ $ZFHTTPS == "x" ]]
+then Cu2nlb=`pgrep u2nl` >/dev/null 2>&1
+CHu2nlb=`pgrep Hu2nl` >/dev/null 2>&1
+Credsocksb=`pgrep redsocks` >/dev/null 2>&1
+if [[ $Cu2nlb != "" ]];then if [[ $CHu2nlb != "" ]];then :
+else ZFHTTPS="u2nl";fi;fi
+if [[ $CHu2nlb != "" ]];then ZFHTTPS="Hu2nl";fi
+if [[ $Credsocksb != "" ]];then ZFHTTPS="redsocks";fi;fi
+#检测脚本是否开启状态防止已关闭脚本造成检测错误
+RCDNATB=`iptables -nL -t nat | $SGREP DNAT | $SGREP tcp` >/dev/null 2>&1
+if [[ $ZFDNS == "x" ]];then if [[ $RCDNATB != "" ]];then :
+else ZFDNS="已关闭";fi;fi
+if [[ $ZFHTTPS == "x" ]];then if [[ $RCDNATB != "" ]];then :
+else ZFHTTPS="已关闭";fi;fi
+sleep 0.1 >/dev/null 2>&1
+#检测模块运行状态方案3
+if [[ $ZFDNS == "x" && $BY == "Jume" ]]
+then if [[ $MDNS == "dnsp" ]];then :
+elif [[ $MDNS == "tdnsp" ]];then :
+elif [[ $MDNS == "pdnsd" ]];then :
+else ZFDNS="已关闭";fi
+if [[ $FDNS == "on" ]];then :
+else ZFDNS="已关闭";fi;fi
+if [[ $ZFHTTPS == "x" && $BY == "Jume" ]]
+then if [[ $CHTTPS == "u2nl" ]];then :
+elif [[ $CHTTPS == "Hu2nl" ]];then :
+elif [[ $CHTTPS == "redsocks" ]];then :
+else ZFHTTPS="已关闭";fi;fi
+#------检测是否使用终极v8防止检测错误
+RCSJ=`iptables -nL -t nat | $SGREP Jume8` >/dev/null 2>&1
+if [[ $RCDNATB != "" && $RCSJ != "" && $MDNS == "on" && $BY == "Jume" ]]
+then ZFDNS="只转发到端口:$MDDK ";fi
+if [[ $RCDNATB != "" && $RCSJ != "" && $CHTTPS == "on" && $BY == "Jume" ]]
+then ZFHTTPS="只转发到端口:$CHDK ";fi
+#输出模块运行状态显示
+if [[ $ZFDNS == "x" ]];then SZFDNS="x"
+ZFDNS="$MDNS启动失败"
+else SZFDNS="o";fi
+if [[ $ZFHTTPS == "x" ]];then SZFHTTPS="x"
+ZFHTTPS="$CHTTPS启动失败"
+else SZFHTTPS="o";fi
+echo "$SZFDNS dns转发 -> $ZFDNS "
+echo "$SZFHTTPS https转发 -> $ZFHTTPS "
+#开启输出监听端口显示
+if [[ $a == "on" ]];then
+echo "---------------------"
+echo "当前监听端口状态："
+echo "---------------------"
+netstat | $SGREP LISTEN
+netstat | $SGREP CLOSE | $SGREP udp
+CLISTEN=`netstat | $SGREP LISTEN`
+CCLOSE=`netstat | $SGREP CLOSE | $SGREP udp`
+if [[ $CLISTEN != "" ]];then :
+elif [[ $CCLOSE != "" ]];then :
+else echo "没有后台监听端口！";fi;fi
+fi
+#执行完毕*************************************
+rm /data/a.conf >/dev/null 2>&1
+exit
