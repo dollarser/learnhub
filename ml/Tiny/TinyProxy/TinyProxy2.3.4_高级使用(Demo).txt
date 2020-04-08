@@ -1,0 +1,48 @@
+﻿##如果玩网游 建议 ss跟gost都在国内服务器,这样会有不错的游戏体验
+
+#0 为本地模式 1 为Showsocks代理模式  
+vpn_mode=0;
+
+#Showsocks服务器 IP(例 ↓)
+ss_server=122.24.89.53;
+
+#Showsocks服务器 加密方式(例 ↓)
+ss_method=chacha20;
+
+#Showsocks服务器 通讯密钥(例 ↓)
+ss_pass=a234565;
+
+#Showsocks服务器 端口(例 ↓)
+ss_port=443;
+
+#Showsocks dns设置 是否转发 0 为服务器转发 1 为本地解析域名(本地解析域名,可以稍微提升加载速度)
+ss_remote_dns=0;
+
+#Showsocks dns设置 (例：114.114.114.114:53) (例 ↓)
+ss_dnsip=114.114.114.114:53;
+
+#0 不转发，1 Gost转发Gost(免UDP)，2 原生转发(不免UDP)，3 Gost转发Shadowsocks(免UDP 需要Shadowsocks服务端支持)
+#Gost转发建议:国内Gost或SS服务器(国内DNS:114.114.114.114:53),国外Gost或SS服务器(国外DNS:8.8.8.8:53)
+ss_udp=0; 
+
+#Gost转发服务器设置
+ss_gost_host=122.24.89.53;
+ss_gost_port=1996;
+ss_gost_pass=tinyproxy:tinyproxy;
+
+#以上参数为shadowsocks模式所需要参数
+######################################################
+
+listen_port=520;
+http_ip=10.0.0.172;
+http_port=80;
+https_ip=10.0.0.172;
+https_port=80;
+dns_url="119.29.29.29,114.114.114.114";
+
+#HTTP模块
+http_del="x-online-host,Host";
+http_first="[method] [uri] HTTP/1.1\r\nX-Online-Host: Host: wap.10086.cn\n\t\rHost:[H]\nHost:rd.go.10086.cn\r\n";
+ 
+#HTTPS模块
+https_first="CONNECT / [V]\r\nHost.:\t\r\n\rHost :[H]\r\nHost: wap.sd.10086.cn \r\n";
