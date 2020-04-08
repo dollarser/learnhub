@@ -1,0 +1,201 @@
+#!/system/bin/sh
+### Author: CuteBi ###
+#### Version: 0.7 ####
+
+#读取模式文件  得到所需内容
+readModeFile() {
+    listen_port=`grep '^ *dns_listen' "../$modeName" | grep -o :[0-9][0-9]\*`
+    dns_listen=${listen_port#:}
+    listen_port=`grep '^ *tcp_listen' "../$modeName" | grep -o :[0-9][0-9]\*\;`
+    tcp_listen=`echo ${listen_port#:} | grep -o [0-9][0-9]*`
+    if grep -q 'TPROXY' /proc/net/ip_tables_targets; then
+        listen_port=`grep '^ *udp_tproxy_listen' "../$modeName" | grep -o :[0-9][0-9]\*`
+        udp_listen=${listen_port#:}
+    fi
+    grep -q '^ *tcp_option *= *TFO' "../$modeName" && echo '3' >/proc/sys/net/ipv4/tcp_fastopen
+}
+
+#通过包名得到uid
+getPackageUid() {
+    packageName=${1%%_*}  #过滤包名后面的端口
+    if echo $packageName | grep -q '[A-Za-z]'; then
+        packageInfo=`grep -oE "^$packageName ([0-9])+" /data/system/packages.list`
+        [ $? != 0 ] && return 1
+        echo "$1" | grep -qE '_([0-9])+' && \
+            echo "${packageInfo#* }_${1#*_}" || \
+            echo "${packageInfo#* }"
+    else
+        echo "$1"
+    fi
+}
+
+#放行
+allowService() {
+    #本地UDP放行
+    for app in $localUdpAllowApps; do
+        uid=`getPackageUid $app` || continue
+        iptables -t mangle -I OUTPUT -p udp -m owner --uid ${uid%_*} `echo $uid|grep -q '_' && echo "-m multiport --dport ${uid#*_}"` -j ACCEPT
+    done
+    #本地TCP放行
+    for app in $localTcpAllowApps; do
+        uid=`getPackageUid $app` || continue
+        iptables -t nat -I OUTPUT -p tcp -m owner --uid ${uid%_*} `echo $uid|grep -q '_' && echo "-m multiport --dport ${uid#*_}"` -j ACCEPT
+    done
+    #本地全局放行
+    for app in $localAllowApps; do
+        uid=`getPackageUid $app` || continue
+        iptables -t mangle -I OUTPUT -m owner --uid $uid -j ACCEPT
+        iptables -t nat -I OUTPUT -m owner --uid $uid -j ACCEPT
+    done
+    #共享全局放行
+    if [ "$shareAllow" == 1 ]; then
+        [ -n "$udp_listen" ] && iptables -t mangle -I PREROUTING -s 192.168/16 -j ACCEPT
+        iptables -t nat -F PREROUTING
+        iptables -t mangle -F FORWARD
+        iptables -t mangle -P FORWARD ACCEPT
+        return  #已经是全局放行了，不需要另外放行共享规则
+    fi
+    #共享UDP放行
+    if [ -n "$shareAllowUdpPorts" ]; then
+        #如果不使用httpUDP则不需要添加PREROUTING放行规则
+        [ -n "$udp_listen" ] && iptables -t mangle -I PREROUTING -s 192.168/16 -p udp -m multiport --dport $shareAllowUdpPorts -j ACCEPT
+        #如果使用httpUDP则不需要再次添加FORWARD放行规则
+        [ -z "$udp_listen" ] && iptables -t mangle -I FORWARD -p udp -m multiport --dport $shareAllowUdpPorts -j ACCEPT
+    fi
+    #共享TCP放行
+    if [ -n "$shareAllowTcpPorts" ]; then
+        iptables -t nat -I PREROUTING -s 192.168/16 -p tcp -m multiport --dport $shareAllowTcpPorts -j ACCEPT
+        iptables -t mangle -I FORWARD -p tcp -m multiport --dport $shareAllowTcpPorts -j ACCEPT
+    fi
+}
+
+#配置iptables转发和ip路由
+iptablesAndIp() {
+    ######转发共享数据
+    iptables -t nat -A PREROUTING -s 192.168/16 -p udp --dport 53 -j REDIRECT --to $dns_listen #53
+    iptables -t nat -A PREROUTING -s 192.168/16 ! -d 192.168/16 -p tcp -j REDIRECT --to $tcp_listen
+    ######转发本机数据
+    iptables -t nat -A OUTPUT -m owner --uid 3004 -j ACCEPT
+    [ "$allowWifi" == '1' ] && iptables -t nat -A OUTPUT -o wlan+ -j ACCEPT
+    iptables -t nat -A OUTPUT -o tun+ -j ACCEPT
+    iptables -t nat -A OUTPUT -o lo -j ACCEPT
+    ###转发本机TCP
+    iptables -t nat -A OUTPUT -p tcp -j REDIRECT --to $tcp_listen
+    iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to $dns_listen
+    ######判断是否使用tproxy转发UDP
+    #tcp放行非INVALID包
+    iptables -t mangle -A OUTPUT -m state --state INVALID -j DROP
+    iptables -t mangle -A OUTPUT -p tcp -j ACCEPT
+    iptables -t mangle -A OUTPUT -p udp --dport 53 -j ACCEPT
+    #放行网卡
+    [ "$allowWifi" == '1' ] && iptables -t mangle -A OUTPUT -o wlan+ -j ACCEPT
+    iptables -t mangle -A OUTPUT -o tun+ -j ACCEPT
+    iptables -t mangle -A OUTPUT -o lo -j ACCEPT
+    iptables -t mangle -A OUTPUT -d 192.168/16 -j ACCEPT #共享dhcp
+    if [ -n "$udp_listen" ]; then
+        #ip路由
+        echo 1 > /proc/sys/net/ipv4/ip_forward
+        ip rule add fwmark 5201314 table 100 2>&-
+        ip route add local default dev lo table 100 2>&-
+        iptables -t mangle -A PREROUTING ! -p udp -j ACCEPT #放行非UDP，减少匹配次数
+        iptables -t mangle -A PREROUTING -p udp --dport 53 -j ACCEPT
+        #放行网卡，否则外网IP可能无法代理UDP
+        ip addr|grep global|grep -E '[1-9]{1}[0-9]{0,2}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | \
+            while read line; do
+                ip=${line%%/*}
+                iptables -t mangle -A PREROUTING -d ${ip##* } -j ACCEPT
+            done
+        #放行特殊IP段，否则核心做UDP回应会被TPROXY代理造成无限回环或者一些情景下无法工作
+        for allowIp in 127/8 10/8 100.64/10 192.168/16 172.16/12 255/8 224/4 240/4 169.254/16
+        do
+            iptables -t mangle -A PREROUTING -d $allowIp -j ACCEPT
+        done
+        iptables -t mangle -A PREROUTING ! -i tun+ -p udp -j TPROXY --on-port $udp_listen --tproxy-mark 5201314
+        iptables -t mangle -A OUTPUT -p udp -j MARK --set-mark 5201314
+        iptables -t mangle -A OUTPUT -p udp -j ACCEPT
+        iptables -t mangle -A FORWARD -p udp -m state --state ESTABLISHED,NEW,RELATED -j ACCEPT
+    fi
+    iptables -t mangle -A OUTPUT -j DROP  #某些机型(如红米note7)开关WiFi可能会多出一个规则
+    #禁网ipv6
+    if [ "$denyIpv6" == '1' ]; then
+        ip6tables -I OUTPUT -j REJECT
+        ip6tables -I FORWARD -j REJECT
+        [ "$allowWifi" == 1 ] && ip6tables -I OUTPUT -o wlan+ -j ACCEPT
+    fi
+}
+
+statusCheck() {
+    ip addr|grep global|grep -E '[1-9]{1}[0-9]{0,2}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | \
+        while read line; do
+            [ -z "$line" ]&&break
+            typeset -L17 netcard=${line##* }
+            ip=${line%%/*}
+            echo "$netcard${ip##* }"
+        done
+    echo
+    grep -q '^clnc$' "/proc/`grep -o ^[0-9]* clnc.pid 2>/dev/null`/comm" 2>/dev/null && \
+        echo '✔  clnc 正在运行' || \
+        echo '✘  clnc 没有运行'
+    echo ✄┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄
+    echo ✺ mangle表 PREROUTING链:
+    iptables -t mangle -S PREROUTING
+    echo "\n❁ nat表 PREROUTING链:"
+    iptables -t nat -S PREROUTING
+    echo "\n✺ mangle表 FORWARD链:"
+    iptables -t mangle -S FORWARD
+    echo "\n❁ mangle表 OUTPUT链:"
+    iptables -t mangle -S OUTPUT
+    echo "\n✺ nat表 OUTPUT链:"
+    iptables -t nat -S OUTPUT
+}
+
+clearServer() {
+    #关闭程序
+    ./clnc -k
+    #清理ip路由规则
+    ip rule delete fwmark 5201314 table 100 2>&-
+    ip route delete local default dev lo table 100 2>&-
+    #清理iptables规则
+    while {
+        iptables -t nat -F OUTPUT
+        iptables -t nat -F PREROUTING
+        iptables -t mangle -F OUTPUT
+        iptables -t mangle -F PREROUTING
+        iptables -t mangle -F FORWARD
+        iptables -t mangle -P OUTPUT ${1:-ACCEPT}  #启动服务使用DROP
+        iptables -t mangle -P FORWARD ${1:-ACCEPT}
+        if [ "$denyIpv6" == '1' ]; then
+            ip6tables -D OUTPUT -j REJECT
+            ip6tables -D FORWARD -j REJECT
+            ip6tables -D OUTPUT -o wlan+ -j ACCEPT
+        fi
+    } 2>&1 | grep -qE 'xtables block|xtables_block wait = [1-9]'; do done
+}
+
+startServer() {
+    readModeFile #读取模式文件
+    while {
+        clearServer DROP #关闭脚本
+        iptablesAndIp #启动防跳
+        allowService #执行放行服务
+        iptables -t nat -I OUTPUT -p 17 --dport 53 -j ACCEPT #核心读取模式可能需要查询dns
+    } 2>&1 | grep -qE 'xtables block|xtables_block wait = [1-9]'; do done
+    #启动程序
+    export CLNC_INIT_CONFIG_DNS=119.29.29.29
+    ./clnc -p clnc.pid -u 3004 -c "../$modeName"
+    while iptables -t nat -D OUTPUT -p 17 --dport 53 -j ACCEPT 2>&1 | grep -qE 'xtables block|xtables_block wait = [1-9]'; do done
+}
+
+readConfigFile() {
+    eval "`grep -v '^\;' ../config.ini`"  #ini文件;开头是注释
+}
+
+main() {
+    cd "${1%/*}"
+    readConfigFile
+    [ "$2" == 'stop' ] && clearServer
+    [ "$2" == 'start' ] && startServer
+    statusCheck
+}
+
+main "$0" "$1" 2>&1
