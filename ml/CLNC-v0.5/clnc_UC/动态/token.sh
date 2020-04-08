@@ -2,9 +2,9 @@
 get_token(){
 #启动数据
 while true; do
-svc data enable
-ip addr|grep global|grep -qE '[1-9]{1,3}[0-9]{0,2}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' && break
-sleep 1
+    svc data enable
+    ip addr|grep global|grep -qE '[1-9]{1,3}[0-9]{0,2}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' && break
+    sleep 1
 done
 echo "❁ 正在获取动态验证..."
 
@@ -13,15 +13,18 @@ echo "❁ 正在获取动态验证..."
 
 #通过接口获取token
 if [ "$token_api" != "" ];then
-rm -rf ./cache
-./wget $token_api -O ./cache &>/dev/null
-echo "获取动态验证成功"
-
-#优化代码
+    rm -rf ./cache
+    ./wget $token_api -O ./cache &>/dev/null
+    if [-e ./cache];then
+        echo "获取动态验证成功"
+    else
+        echo "动态接口失效，请更换接口"
+    fi
 else
-echo "动态接口失效，请更换接口"
+    echo "请配置动态接口"
 fi
 
+#优化代码
 U=$(grep -w -aom 1 '[a-z0-9]\{32\}' ./cache)
 T=$(grep -w -aom 1 '[a-z0-9]\{96\}' ./cache)
 S=$(date +%Y年%m月%d日%T)
@@ -55,6 +58,7 @@ dns_tcp=http;
 dns_listen_port=65053;
 dns_url=\"119.29.29.29\";" >../tiny.conf
 echo "王卡动态tiny模式已保存为tiny.conf"
+
 else
 echo "#获取时间:$S
 #clnc核心
