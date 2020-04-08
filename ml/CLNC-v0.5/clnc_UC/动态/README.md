@@ -26,9 +26,13 @@ token_min.sh只是单纯获取token, 不生成脚本
  * `,` 散列的值，例如 `1,3`, `2,15,23`
 
 + 杀掉进程
+
     \# 查看进程pid
+
     pgrep crond
+
     \# 根据进程pid杀掉进程
+
     kill -9 pid
 
 + 启动任务
