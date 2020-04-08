@@ -1,0 +1,1 @@
+CreateObject("WScript.Shell").Run "CNS_win_64.exe -enable-httpDNS -encrypt-password 'huo@shen8'",0
