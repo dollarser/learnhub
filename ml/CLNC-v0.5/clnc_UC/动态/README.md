@@ -10,11 +10,10 @@ token_min.sh只是单纯获取token, 不生成脚本
 
 添加定时任务
 
-打开文件夹: /system/etc/cron.d/root
-
+打开文件夹: /system/etc/cron.d/root。
 添加如下内容, 让token.sh脚本没5分钟执行一次, 注意路径设置成自己token.sh所放的路径:
-
 ```*/5 * * * * /system/xbin/clnc_UC/动态/token_latest.sh```
+或直接将此文件夹下的root移动到/system/etc/cron.d/root
 
 语法说明：
 + crontab的格式为: `* * * * * Command`
