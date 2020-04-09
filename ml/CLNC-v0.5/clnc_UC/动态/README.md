@@ -1,5 +1,5 @@
 + 自动在脚本所在目录外生成tiny或clnc脚本
-其中token.sh为模式生成脚本
+其中token_latest.sh为模式生成脚本
 token_min.sh只是单纯获取token, 不生成脚本
 
 +  配合CRON定时任务，让模式自动更新
@@ -14,7 +14,7 @@ token_min.sh只是单纯获取token, 不生成脚本
 
 添加如下内容, 让token.sh脚本没5分钟执行一次, 注意路径设置成自己token.sh所放的路径:
 
-```*/5 * * * * /system/xbin/clnc_UC/动态/token.sh```
+```*/5 * * * * /system/xbin/clnc_UC/动态/token_latest.sh```
 
 语法说明：
 + crontab的格式为: `* * * * * Command`

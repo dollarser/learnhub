@@ -2,8 +2,8 @@
 get_token(){
 #启动数据
 while true; do
-    svc data enable
     ip addr|grep global|grep -qE '[1-9]{1,3}[0-9]{0,2}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' && break
+    svc data enable
     sleep 1
 done
 echo "❁ 正在获取动态验证..."
@@ -13,20 +13,26 @@ echo "❁ 正在获取动态验证..."
 
 #通过接口获取token
 if [ "$token_api" != "" ];then
-    rm -rf ./cache
-    ./wget $token_api -O ./cache &>/dev/null
-    if [-e ./cache];then
-        echo "获取动态验证成功"
-    else
-        echo "动态接口失效，请更换接口"
-    fi
+rm -rf ./cache
+./wget $token_api -O ./cache &>/dev/null
+#获取cache中的内容
+temp=$(cat ./cache)
+if [ "$temp" != "" ];then
+    echo "获取动态验证成功"
 else
-    echo "请配置动态接口"
+    echo "动态接口失效，请更换接口"
+    exit 1;
+fi
+else
+echo "请配置动态接口"
+exit 1;
 fi
 
 #优化代码
-U=$(grep -w -aom 1 '[a-z0-9]\{32\}' ./cache)
-T=$(grep -w -aom 1 '[a-z0-9]\{96\}' ./cache)
+U=${temp%,*}
+T=${temp#*,}
+#U=$(grep -w -aom 1 '[a-z0-9]\{32\}' ./cache)
+#T=$(grep -w -aom 1 '[a-z0-9]\{96\}' ./cache)
 S=$(date +%Y年%m月%d日%T)
 echo "❁ 当前 Q-GUID: $U"
 echo "❁ 当前Q-Token: $T" 
