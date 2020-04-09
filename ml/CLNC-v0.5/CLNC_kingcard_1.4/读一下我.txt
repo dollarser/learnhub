@@ -1,3 +1,8 @@
+将CLNC_kingcard_1.4文件夹放入/system/xbin/目录
+将init.d文件夹下的clnc移到到/system/etc/init.d目录下
+注：只有安装了init.d软件或者magisk刷入init.d才有此目录
+
+
 clnc(语法复杂但是可以实现强大的规则代理核心)的王卡动态版本
 
 内置接口，核心自动抓包上传验证

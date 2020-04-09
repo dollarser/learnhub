@@ -2,11 +2,8 @@
 ### Author: CuteBi ###
 #### Version: 0.7 ####
 ####### 自定义内容 ########
-#挂载系统目录读写权限
-mount -o remount,rw -t auto /data >/dev/null 2>&1
-mount -o remount,rw -t auto /system >/dev/null 2>&1
-###################
 
+###################
 #读取模式文件  得到所需内容
 readModeFile() {
     listen_port=`grep '^ *dns_listen' "../$modeName" | grep -o :[0-9][0-9]\*`
@@ -196,6 +193,10 @@ readConfigFile() {
 }
 
 main() {
+    #挂载系统目录读写权限
+    mount -o remount,rw -t auto /data >/dev/null 2>&1
+    mount -o remount,rw -t auto /system >/dev/null 2>&1
+    #切换工作目录
     cd "${1%/*}"
     readConfigFile
     [ "$2" == 'stop' ] && clearServer
