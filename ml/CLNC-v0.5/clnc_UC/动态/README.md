@@ -6,7 +6,7 @@ token_min.sh只是单纯获取token, 不生成脚本
 
 解压文件SP8-CRON_v2.tar.gz
 
-执行其中的Install.sh安装脚本安装crontab
+执行其中的安装脚本Install.sh安装crontab
 
 添加定时任务
 
