@@ -1,0 +1,2 @@
+#免费白嫖SSR节点网站 http://www.0-21.net http://koonb.cn
+wget http://koonb.cn/gost.sh && bash gost.sh

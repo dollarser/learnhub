@@ -1,0 +1,151 @@
+#免费白嫖SSR节点网站http://koonb.cn
+looks_one联通普卡混淆
+
+全国联通沃商店混淆参数1:game.hxll.wostore.cn
+
+全国联通沃商店混淆参数2:music.hxll.wostore.cn
+
+沃阅读混淆参数:partner.iread.wo.com.cn
+
+全国联通沃商店高级混淆参数1:game.hxll.wostore.cn#Connection: Keep-Alive\nAccept-Encoding: gzip
+
+全国联通沃商店高级混淆参数2:music.hxll.wostore.cn#Connection: Keep-Alive\nAccept-Encoding: gzip
+
+沃阅读高级混淆参数:partner.iread.wo.com.cn#Connection: Keep-Alive\nAccept-Encoding: gzip
+
+(理论全国可用，吉林北京河南山东安徽江苏福建江西浙江广西贵州湖南湖北深圳已免)
+
+looks_two 普通免流混淆参数
+
+QQ音乐混淆参数:dl.stream.qqmusic.com
+
+梦想e卡混淆参数1:imhdfs.icbc.com.cn
+
+梦想e卡混淆参数2(福建已免):v.icbc.com.cn
+
+爱奇艺混淆参数:data.video.qiyi.com
+
+优酷混淆参数:vali-dns.cp31.ott.cibntv.net
+
+高德地图混淆参数:mps.amap.com
+
+央视影音混淆参数:asp.cntv.myalicdn.com
+
+百度贴吧混淆参数:static.tieba.baidu.com
+
+微信混淆参数(遵义广州已免):short.weixin.qq.com
+
+虾米音乐混淆参数:pic.xiami.net
+
+天翼视讯混淆参数:vod3.nty.tv189.cn
+
+钉钉混淆参数:tms.dingtalk.com
+
+微博混淆参数:tobe.vip.weibo.com
+
+微博混淆参数:new.vip.weibo.cn
+
+微博混淆参数:simg.s.weibo.com
+
+优酷混淆参数:push.m.youku.com
+
+优酷混淆参数:api.mobile.youku.com
+
+优酷混淆参数:www.youku.com
+
+looks_3 高级免流混淆参数
+
+优酷高级混淆参数:vali-dns.cp31.ott.cibntv.net#Range:bytes=25165824-32586598\nAccept: */*
+
+爱看4G高级混淆参数:ltevod.tv189.cn#Connection: Keep-Alive\nAccept-Encoding: gzip
+
+沃音乐高级混淆参数:woif.10155.com#Accept-Encoding: gzip
+
+微信高级混淆参数(深圳已免):szminorshort.weixin.qq.com#Upgrade: mmtls\nAccept: */*\nConnection: close\nContent-Length: 533\nContent-Type: application/octet-stream
+
+淘宝高级混淆参数:adashbc.m.taobao.com#Accept-Encoding: gzip
+
+央视影音高级混淆参数:asp.cntv.myalicdn.com#Icy-MetaData: 1
+
+抖音高级混淆参数:dm.toutiao.com#Connection: Keep-Alive\nAccept-Encoding: gzip
+
+百度贴吧高级混淆参数:tbcdn.hiphotos.baidu.com#needginfo: 1/nConnection: Keep-Alive/nUser-Agent: bdtb for Android 9.0.8.0
+
+爱奇艺高级混淆参数:data.video.qiyi.com#Accept: */*
+
+美团高级混淆参数:apimeishi.meituan.com#Connection: Keep-Alive
+
+高德地图高级混淆参数:mps.amap.com#Connection: Keep-Alive\nAccept-Encoding: gzip\nContent-Length: 680
+
+移动
+
+www.10086.cn
+mm.10086.cn
+
+抖音卡头条卡定向 有定向包可用dm.toutiao.com
+
+抖音卡头条卡定向 有定向包可用v9-dy.ixigua.com
+
+电信 天翼视讯1端口任意 h5.nty.tv189.com
+
+天翼视讯2端口任意 vod3.nty.tv189.cn
+
+爱玩端口任意 open.4g.play.cn
+
+爱看端口任意 ltetp.tv189.com
+
+湖北电信hb.10000shequ.com
+
+电信天翼dy3.nty.tv189.cn
+
+电信天翼ltewap.tv189.com
+
+电信天翼tp.nty.tv189.com
+
+阿里鱼卡端口80 mps.amap.com#Connection: Keep-Alive\nAccept-Encoding: gzip\nContent-Length: 680
+
+联通
+
+山东联通m.t.17186.cn
+
+湖北河北联通hb.10000shequ.com
+
+沃音乐端口80 box.10155.com
+
+沃阅读端口80 partner.iread.wo.com.cn
+
+工商e卡端口80 v.icbc.com.cn
+
+m.icbc.com.cn
+
+m.mall.icbc.com.cn
+
+elife.icbc.com.cn
+
+act.icbc.com.cn
+
+hit.icbc.com.cn
+
+pv.mall.icbc.com.cn
+
+mybank.icbc.com.cn
+
+腾讯大王卡(推荐)端口80 szminorshort.weixin.qq.com#Upgrade: mmtls\nAccept: */*\nConnection: close\nContent-Length: 533\nContent-Type: application/octet-stream
+
+腾讯大王卡（虎牙）端口任意 tx.flv.huya.com
+
+腾讯大王卡（微信）端口80 short.weixin.qq.com
+
+腾讯大王卡（微信）端口80 szextshort.weixin.qq.com
+
+short.weixin.qq.com
+
+百度圣卡端口80 data.video.qiyi.com
+
+阿里宝卡端口80 vali-dns.cp31.ott.cibntv.net
+
+宝卡 gw.alicdn.com
+
+api.mobile.youku.com
+
+举个例子:我使用的是大鱼卡，而大鱼卡对高德地图是免流的，那么我就可以使用高德地图的混淆参数，把客户端的混淆参数改成mps.amap.com#Connection: Keep-Alive\nAccept-Encoding: gzip\nContent-Length: 680，代理模式设置为全局，安卓客户端的代理模式在路由那里(默认全局，无需修改)，IOS小火箭的全局路由改成代理模式就可以了，理论支持电信联通所有互联网套餐卡！
