@@ -1,0 +1,22 @@
+{
+  "BindAddress": ":1053",
+  "PrimaryDNS": [
+    {
+      "Name": "GoogleDNS",
+      "Address": "8.8.8.8:53",
+      "Protocol": "tcp",
+      "SOCKS5Address": "127.0.0.1:1080",
+      "Timeout": 6,
+      "EDNSClientSubnet": {
+        "Policy": "disable",
+        "ExternalIP": "",
+        "NoCookie": true
+      }
+    }
+  ],
+  "OnlyPrimaryDNS": true,
+  "HostsFile": "/etc/hosts",
+  "MinimumTTL": 120,
+  "CacheSize" : 960,
+  "RejectQtype": [255]
+}

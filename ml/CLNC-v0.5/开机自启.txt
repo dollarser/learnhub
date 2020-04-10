@@ -1,0 +1,7 @@
+在/etc/init.d/目录下新建文件clnc，填写以下两行：
+```
+#!/system/bin/sh
+/system/xbin/clnc/start.sh
+```
+
+启用init.d可以安装magsik模块，直接搜init.d, 或google play下载init.d

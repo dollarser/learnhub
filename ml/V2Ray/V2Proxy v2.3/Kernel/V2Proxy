@@ -1,0 +1,232 @@
+#!/system/bin/sh
+#路径获取
+cd "${0%/*}"
+cd ../
+. ./*.ini
+#脚本代码全部开源、严禁用于商业用途、否则后果自负！
+#赋值/检测busybox
+box=*/busybox
+if [ ! -s $box ];then
+box=busybox;fi
+for V2Proxy in rm ip awk cat cut grep pkill chmod pgrep ifconfig;do
+alias $V2Proxy="$box $V2Proxy";done
+
+#删除备份/获取权限
+$box rm -f *.bak */*.bak 2>/dev/null
+$box chmod -R 777 * 2>/dev/null
+APN=`dumpsys connectivity | $box grep -v "<unknown" | $box grep -v "(none)" | $box grep extra | $box awk '{print $9}' | $box cut -d "," -f 1 | $box grep -v "ims"`
+
+#防跳关闭
+if [[ $1 = "OFF" ]]
+then if [[ $WL = "ON" ]]
+then svc data disable;fi
+for A in overture redsocks2 v2ray;do
+pkill $A;done
+
+#iptables规则关闭
+ip rule del fwmark 0x1 table 121 > /dev/null 2>&1
+ip route del local 0.0.0.0/0 dev lo table 121 > /dev/null 2>&1
+iptables -t nat -F OUTPUT
+iptables -t nat -F PREROUTING
+iptables -t mangle -P OUTPUT ACCEPT
+iptables -t mangle -F OUTPUT
+iptables -t mangle -F PREROUTING
+fi
+
+#overture配置
+echo "{
+  \"BindAddress\": \":1053\",
+  \"PrimaryDNS\": [
+    {
+      \"Name\": \"GoogleDNS\",
+      \"Address\": \"$Dns:53\",
+      \"Protocol\": \"tcp\",
+      \"SOCKS5Address\": \"127.0.0.1:1080\",
+      \"Timeout\": 6,
+      \"EDNSClientSubnet\": {
+        \"Policy\": \"disable\",
+        \"ExternalIP\": \"\",
+        \"NoCookie\": true
+      }
+    }
+  ],
+  \"OnlyPrimaryDNS\": true,
+  \"HostsFile\": \"/etc/hosts\",
+  \"MinimumTTL\": 120,
+  \"CacheSize\" : 960,
+  \"RejectQtype\": [255]
+}"> Kernel/overture.json
+chmod 777 */overture.json
+#redsocks2配置
+echo "base {
+ log_debug = off;
+ log_info = off;
+ log = stderr;
+ daemon = on;
+ redirector = iptables;
+}
+redsocks {
+    local_ip = 0.0.0.0;
+    local_port = 1081;
+    ip = 127.0.0.1;
+    port = 1080;
+    type = socks5;
+    timeout = 10;
+}
+redudp {
+local_ip = 0.0.0.0;
+local_port = 1088;
+ip = 127.0.0.1;
+port = 1080;
+type = socks5;
+udp_timeout = 20;
+}" > UDP/redsocks2.conf
+chmod 777 */redsocks2.conf
+
+#防跳开启
+if [[ $2 = "ON" ]]
+then if [[ $WL = "ON" ]]
+then svc data enable;fi
+
+IP=`ping -c1 -w1 -W1 $IP | awk -F'[(|)]' 'NR==1{print $2}'`
+#配置逻辑
+setting=`cat *.ini | awk '{gsub(/[ \t]*\/\/.*/,""); print $0}'`
+if [ $Adblock_Bvc = "ON" ]
+then Bvc=",\n    \"routing\": {\n   \"domainStrategy\": \"Asls\",\n      \"rules\": [\n    {\n    \"type\": \"field\",\n             \"domain\": [\n                       \"a.play.api.3g.youku.com\",\n                        \"ac.qq.com\",\n                        \"acc.music.qq.com\",\n                        \"access.tv.sohu.com\",\n                        \"aid.video.qq.com\",\n                        \"aidbak.video.qq.com\",\n                        \"antiserver.kuwo.cn\",\n                        \"api.3g.tudou.com\",\n                        \"api.3g.youku.com\",\n                        \"api.appsdk.soku.com\",\n                        \"api.itv.letv.com\",\n                        \"api.le.com\",\n                        \"api.letv.com\",\n                        \"api.live.letv.com\",\n                        \"api.mob.app.letv.com\",\n                        \"api.tv.itc.cn\",\n                        \"api.tv.sohu.com\",\n                        \"api.unipay.qq.com\",\n                        \"api.www.letv.com\",\n                        \"api.youku.com\",\n                        \"app.bilibili.com\",\n                        \"ark.letv.com\",\n                        \"bangumi.bilibili.com\",\n                        \"c.y.qq.com\",\n                        \"cache.m.iqiyi.com\",\n                        \"cache.video.iqiyi.com\",\n                        \"cache.video.qiyi.com\",\n                        \"cache.vip.iqiyi.com\",\n                        \"cache.vip.qiyi.com\",\n                        \"cctv1.vtime.cntv.cloudcdn.net\",\n                        \"cctv13.vtime.cntv.cloudcdn.net\",\n                        \"cctv5.vtime.cntv.cloudcdn.net\",\n                        \"cctv5plus.vtime.cntv.cloudcdn.net\",\n                        \"chrome.2345.com\",\n                        \"client.api.ttpod.com\",\n                        \"cloud.vip.xunlei.com\",\n                        \"cupid.iqiyi.com\",\n                        \"data.bilibili.com\",\n                        \"data.video.iqiyi.com\",\n                        \"data.video.qiyi.com\",\n                        \"dispatcher.video.sina.com.cn\",\n                        \"douban.fm\",\n                        \"dpool.sina.com.cn\",\n                        \"dyn.ugc.pps.tv\",\n                        \"dynamic.app.m.letv.com\",\n                        \"dynamic.cloud.vip.xunlei.com\",\n                        \"dynamic.live.app.m.letv.com\",\n                        \"dynamic.meizi.app.m.letv.com\",\n                        \"dynamic.search.app.m.letv.com\",\n                        \"epg.api.pptv.com\",\n                        \"geo.js.kankan.com\",\n                        \"hot.vrs.letv.com\",\n                        \"hot.vrs.sohu.com\",\n                        \"i-play.mobile.youku.com\",\n                        \"i.play.api.3g.youku.com\",\n                        \"i.y.qq.com\",\n                        \"iface.iqiyi.com\",\n                        \"iface2.iqiyi.com\",\n                        \"info.zb.qq.com\",\n                        \"info.zb.video.qq.com\",\n                        \"inner.kandian.com\",\n                        \"interface.bilibili.com\",\n                        \"internal.check.duokanbox.com\",\n                        \"ip.apps.cntv.cn\",\n                        \"ip.kankan.com\",\n                        \"ip.kugou.com\",\n                        \"ip2.kugou.com\",\n                        \"ipcheck.kuwo.cn\",\n                        \"iplocation.geo.iqiyi.com\",\n                        \"iplocation.geo.qiyi.com\",\n                        \"ipservice.163.com\",\n                        \"kandian.com\",\n                        \"letv.cn\",\n                        \"letv.com\",\n                        \"list.youku.com\",\n                        \"listso.m.areainfo.ppstream.com\",\n                        \"live.api.hunantv.com\",\n                        \"live.g3proxy.lecloud.com\",\n                        \"live.gslb.letv.com\",\n                        \"live.pptv.com\",\n                        \"live.tv.sohu.com\",\n                        \"lixian.vip.xunlei.com\",\n                        \"lixian.xunlei.com\",\n                        \"m.letv.com\",\n                        \"m10.music.126.net\",\n                        \"mobi.kuwo.cn\",\n                        \"mobile.api.hunantv.com\",\n                        \"mobilefeedback.kugou.com\",\n                        \"mqqplayer.3g.qq.com\",\n                        \"music.163.com\",\n                        \"music.baidu.com\",\n                        \"music.sina.com.cn\",\n                        \"my.tv.sohu.com\",\n                        \"nmobi.kuwo.cn\",\n                        \"openapi.youku.com\",\n                        \"pad.tv.sohu.com\",\n                        \"pay.tudou.com\",\n                        \"pay.video.qq.com\",\n                        \"pay.youku.com\",\n                        \"paybak.video.qq.com\",\n                        \"pcweb.api.mgtv.com\",\n                        \"pl-ali.youku.com\",\n                        \"play-ali.youku.com\",\n                        \"play-dxk.youku.com\",\n                        \"play.api.3g.tudou.com\",\n                        \"play.api.3g.youku.com\",\n                        \"play.api.pptv.com\",\n                        \"play.baidu.com\",\n                        \"play.youku.com\",\n                        \"player-pc.le.com\",\n                        \"player.pc.le.com\",\n                        \"proxy.music.qq.com\",\n                        \"proxymc.qq.com\",\n                        \"qzs.qq.com\",\n                        \"s.plcloud.music.qq.com\",\n                        \"search.api.3g.tudou.com\",\n                        \"search.api.3g.youku.com\",\n                        \"search.lekan.letv.com\",\n                        \"serviceinfo.sdk.duomi.com\",\n                        \"sns.video.qq.com\",\n                        \"so.open.163.com\",\n                        \"spark.api.xiami.com\",\n                        \"sports1pull.live.wscdns.com\",\n                        \"ssports.com\",\n                        \"ssports.smgbb.cn\",\n                        \"st.live.letv.com\",\n                        \"static.api.sports.letv.com\",\n                        \"static.itv.letv.com\",\n                        \"tingapi.ting.baidu.com\",\n                        \"tms.is.ysten.com\",\n                        \"tools.aplusapi.pptv.com\",\n                        \"tv.api.3g.tudou.com\",\n                        \"tv.api.3g.youku.com\",\n                        \"tv.weibo.com\",\n                        \"ups.youku.com\",\n                        \"v.api.hunantv.com\",\n                        \"v.api.mgtv.com\",\n                        \"v.iask.com\",\n                        \"v.pps.tv\",\n                        \"v.youku.com\",\n                        \"v5.pc.duomi.com\",\n                        \"vdn.apps.cntv.cn\",\n                        \"vdn.live.cntv.cn\",\n                        \"video.qq.com\",\n                        \"video.sina.com.cn\",\n                        \"video.tudou.com\",\n                        \"vip.sports.cntv.cn\",\n                        \"vxml.56.com\",\n                        \"web-play.pplive.cn\",\n                        \"web-play.pptv.com\",\n                        \"wtv.v.iask.com\",\n                        \"www.bilibili.com\",\n                        \"www.iqiyi.com\",\n                        \"www.kugou.com\",\n                        \"www.kuwo.cn\",\n                        \"www.qie.tv\",\n                        \"www.soku.com\",\n                        \"www.tudou.com\",\n                        \"www.xiami.com\",\n                        \"www.yinyuetai.com\",\n                        \"www.youku.com\",\n                        \"zb.s.qq.com\",\n                        \"ipip.net\",\n                        \"ipinfo.io\",\n                        \"ifconfig.co\"        \n          ],\n               \"outboundTag\": \"direct\"\n         }\n       ]\n    }\n  }"
+elif then 0
+fi
+if [[ $Network = "tcp" ]];
+then echo "{\n        \"inbounds\": [\n       {\n        \"port\": 1080,\n        \"protocol\": \"socks\",\n         \"sniffing\": {      \"enabled\": true,\n        \"destOverride\": [\"http\",\"tls\" ],\n         \"settings\": {\n        \"auth\": \"noauth\",\n        \"udp\": true\n         }\n   }\n }\n],\n       \"outbounds\": [\n      {\n         \"tag\": \"proxy\", \n  \"protocol\": \"vmess\",\n        \"settings\": {\n        \"vnext\": [\n      {\n        \"address\": \"$IP\",\n        \"port\": $Port,\n        \"users\": [\n      {\n        \"id\": \"$UUID\",\n        \"alterId\": $Alterld,\n        \"security\": \"$security\"\n                              }\n                         ]\n                   }\n             ]\n      },\n        \"streamSettings\": {\n        \"network\": \"tcp\",\n        \"tcpSettings\": {\n        \"header\": {\n        \"type\": \"http\",\n        \"request\": {\n        \"version\": \"1.1\",\n        \"method\": \"GET\",\n        \"path\": [\"$Path\"],\n        \"headers\": {\n        \"Host\": [\"$Host\"],\n       $XH\n       \"Connection\": [\"keep-alive\"]\n                    }\n                 }\n             }\n         }\n      }\n   },\n   {\n      \"protocol\": \"freedom\",\n      \"settings\": {},\n      \"tag\": \"direct\"\n    }\n  ]\n} $Bvc"> Kernel/config.json
+elif [[ $Network = "ws" ]]
+then echo "{\n        \"inbounds\": [\n       {\n       \"port\": 1080,\n        \"protocol\": \"socks\",\n          \"sniffing\": {      \"enabled\": true,\n        \"destOverride\": [\"http\",\"tls\" ],\n          \"domainOverride\": [\"tls\",\"http\"],\n         \"settings\": {\n        \"auth\": \"noauth\",\n        \"udp\": true\n      }\n   }\n    }\n],\n        \"outbounds\": [\n     {\n        \"tag\": \"proxy\",    \n\"protocol\": \"vmess\",\n        \"settings\": {\n        \"vnext\": [\n   {\n        \"address\": \"$IP\",\n        \"port\": $Port,\n        \"users\": [\n   {\n        \"id\": \"$UUID\",\n        \"alterId\": $Alterld,\n        \"security\": \"$security\"\n                              }\n                         ]\n                   }\n             ]\n        },\n        \"streamSettings\": {\n        \"network\": \"ws\",\n        \"wsSettings\": {      \n        \"path\": \"/\",\n        \"headers\": {\n        \"Host\": \"$Host\"\n                      }\n                 }\n            }\n      },\n{\n      \"protocol\": \"freedom\",\n      \"settings\": {},\n      \"tag\": \"direct\"\n }\n  ]\n}$Bvc" > Kernel/config.json
+elif [[ $Network = "kcp" ]]
+then echo "{\n        \"inbounds\": [\n       {\n       \"port\": 1080,\n        \"protocol\": \"socks\",\n          \"sniffing\": {    \"enabled\": true,\n        \"destOverride\": [\"http\",
+\"tls\" ],\n        \"domainOverride\": [\"tls\",\"http\"],\n         \"settings\": {\n        \"auth\": \"noauth\",\n        \"udp\": true\n        } }\n    }\n],\n        \"outbounds\": [\n       {\n       \"tag\": \"proxy\",  \n \"protocol\": \"vmess\",\n        \"settings\": {\n        \"vnext\": [\n   {\n        \"address\": \"$IP\",\n        \"port\": $Port,\n        \"users\": [\n   {\n        \"id\": \"$UUID\",\n        \"alterId\": $Alterld,\n        \"security\": \"$security\"\n                              }\n                         ]\n                   }\n             ]\n        },\n        \"streamSettings\": {\n        \"network\": \"kcp\",\n        \"kcpSettings\": {\n         \"mtu\": 1350,\n         \"tti\": 20,\n         \"uplinkCapacity\": 5,\n        \"downlinkCapacity\": 20,\n        \"congestion\": false,\n        \"readBufferSize\": 1,\n        \"writeBufferSize\": 1,\n        \"header\": {\n        \"type\": \"none\"\n                      }\n                 }\n            }\n}, \n{\n      \"protocol\": \"freedom\",\n      \"settings\": {},\n      \"tag\": \"direct\"\n  } ]\n}$Bvc" > Kernel/config.json
+fi
+
+#UDP转发/关闭
+if [[ $UDP = "ON" ]]
+then ip rule add fwmark 0x1 table 121
+ip route add local 0.0.0.0/0 dev lo table 121
+iptables -t mangle -I OUTPUT -p udp -j MARK --set-mark 0x1
+iptables -t mangle -I PREROUTING -p udp -j TPROXY --on-port 1088 --tproxy-mark 0x1
+for X in 0/8 127/8 10/8 172.16/12 192.168/16 100.64/10 169.254/16 224/3;do
+iptables -t mangle -I PREROUTING -d $X -j ACCEPT;done
+*/redsocks2 -c */redsocks2.conf &
+else iptables -t nat -I OUTPUT -p udp -j REDIRECT --to-ports 2018;fi >/dev/null 2>&1
+
+#标准iptables链
+iptables -t nat -A OUTPUT -p tcp -m owner --uid-owner 0 -j ACCEPT
+iptables -t nat -I OUTPUT -p udp --dport 53 -j REDIRECT --to 1053
+iptables -t nat -A OUTPUT -o lo -j ACCEPT
+iptables -t nat -A OUTPUT -p tcp -j REDIRECT --to 1081
+*/overture -c */overture.json >/dev/null 2>&1 &
+*/v2ray -config */*.json >/dev/null 2>&1 &
+
+#本机配置/热点配置
+if [[ $IP_BMD != "" ]];then
+for BMD in $IP_BMD;do
+iptables -t mangle -I OUTPUT -p tcp -s $BMD/16 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -t mangle -I OUTPUT -p udp -s $BMD/16 --dport 53 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT;done
+else
+iptables -t mangle -I OUTPUT -p tcp -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -t mangle -I OUTPUT -p udp --dport 53 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT;fi
+
+if [[ $TCP_FX != "" ]]
+then for T in $TCP_FX;do
+iptables -t nat -I OUTPUT -m owner --uid $T -p 6 -j ACCEPT
+iptables -t mangle -I OUTPUT -m owner --uid $T -p 6 -j ACCEPT;done;fi
+
+if [[ $UDP_FX != "" ]]
+then for U in $UDP_FX;do
+iptables -t nat -I OUTPUT -m owner --uid $U -p 17 -j ACCEPT
+iptables -t mangle -I OUTPUT -m owner --uid $U -p 17 -j ACCEPT;done;fi
+
+if [[ $UDP_JW != "" ]]
+then for UJ in $UDP_JW;do
+iptables -t nat -I OUTPUT -m owner --uid $UJ -p 17 -j DROP
+iptables -t mangle -I OUTPUT -m owner --uid $UJ -p 17 -j DROP;done;fi
+
+if [[ $NC_FX != "" ]];then
+for N in $NC_FX;do
+iptables -t nat -I OUTPUT -o $N -j ACCEPT
+iptables -t mangle -I OUTPUT -o $N -j ACCEPT;done;fi
+if [[ $Hot = "ON" ]]
+then iptables -t nat -I PREROUTING -p 17 --dport 53 -j REDIRECT --to-ports 1053
+iptables -t nat -I PREROUTING -s 192.168/16 -p 6 -j REDIRECT --to-ports 1081;fi
+if [[ $WIFI != "ON" ]]
+then iptables -t nat -I OUTPUT -o wlan+ -j ACCEPT
+iptables -t mangle -I OUTPUT -o wlan+ -j ACCEPT;fi
+fi
+
+#输出显示赋值
+for WK in `$box cat /data/misc/net/rt_tables`;do
+if [[ `$box ip addr | $box grep "/" | $box grep -i $WK` != "" ]]
+then WWK=$WK
+SWK=`$box ifconfig $WK` 2>/dev/null;fi;done
+NW=`$box ip addr | $box grep global | $box grep inet | $box grep -v inet6 | $box grep -v 10.0 | $box grep -v 192.168 | $box awk '{print $2}' | $box cut -d "/" -f 1`
+TX=`echo ${SWK#*RX bytes} | $box cut -d "(" -f 2 | $box cut -d ")" -f 1 | $box cut -d "i" -f 1`
+wifi=`cat /data/misc/wifi/softap.conf`
+#脚本输出信息
+echo "\n\n
+                V2Proxy v2.3          
+                                                               
+                        日期: $(date +%Y年%m月%d日)                                              
+          ________________________
+"
+if [[ `pgrep v2ray` != "" ]]
+then
+echo "             核心 : v2ray √ "
+else
+echo "             核心 : v2ray × "
+fi
+if [[ `pgrep overture` != "" ]]
+then
+echo "\n             DNS : overture √ "
+else
+echo "\n             DNS : overture × "
+fi
+if [[ $UDP = "ON" ]]
+then if [[ `pgrep redsocks2` != "" ]]
+then
+echo "\n             全局 : redsocks2 √ "
+else
+echo "\n             全局 : redsocks2 × "
+fi
+fi
+echo "          ________________________"
+Po=`cat */*.json`
+Po=`echo "${Po#*inbound}" | grep port | grep -o [0-9][0-9]\*`
+IP=`grep address */*.json | grep -o [0-9][^\"]*`
+echo "\n             实例 : $IP  "
+echo "          ________________________"
+
+if [[ $WWK != "wlan0" ]]
+then if [[ $NW != "" ]]
+then for V2Proxy in $NW;do
+done
+if [[ $TX = "0.0 B" ]] || [[ $TX = "" ]]
+then LL="没查到流量 ×"
+else LL="$TX 流量";fi
+if [[ APN != "" ]]
+then echo "\n             APN : $APN ";fi
+echo "\n             已用 : $LL"
+else echo "\n             网络 : 网络未连接 ";fi
+else echo "\n             无线 : WIFI已连接";fi
+
+RD=`$box ip neigh | $box grep REACHABLE | $box grep -v "192.168.1.1" | $box grep -v "192.168.0.1" | $box awk '{print $1}'`
+if [[ $RD != "" ]] && [[ `$box ip addr | $box grep inet | $box grep 192.168.43.1` != "" ]]
+then echo "     ————————————————————————\n"
+for V2Proxy in $RD;do
+if [ $V2Proxy != "" ]
+then v2proxy=$(($v2proxy+1));fi;done
+source /data/misc/wifi/hostapd.conf >/dev/null 2>&1
+RWK=`$box ifconfig $interface` >/dev/null 2>&1
+echo "             在线 : $v2proxy 个连接\n\n        信息 :$(echo $wifi)\n\n        已用 : `echo ${RWK#*TX bytes} | $box cut -d "(" -f 2 | $box cut -d ")" -f 1 | $box cut -d "i" -f 1` 流量\n";fi
+echo "          ________________________\n"
+if [[ $QM != "" ]]
+then echo "$QM";fi
+echo "          ________________________\n
+             作者 - 南音
+             核心 - v2ray\n                         
+        仅供学习交流之用、严禁用于商业用途\n"

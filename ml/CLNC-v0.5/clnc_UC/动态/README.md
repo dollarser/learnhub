@@ -1,5 +1,9 @@
-+ 自动在脚本所在目录外生成tiny或clnc脚本
-其中token_latest.sh为模式生成脚本
++ 自动在本脚本所在上级目录生成tiny或clnc脚本
+其中
+* token_min.sh为动态获取脚本，不会生成模式
+* token0.2.sh可生成模式
+* token_latest.sh是为clnc_UC高度定制脚本，只能配合clnc_UC使用，真正的自动更新，自动重启
+
 token_min.sh只是单纯获取token, 不生成脚本
 
 +  配合CRON定时任务，让模式自动更新

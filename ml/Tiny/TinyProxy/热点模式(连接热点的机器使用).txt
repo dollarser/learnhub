@@ -1,0 +1,22 @@
+mode=wap;
+listen_port=65080;
+daemon=on;
+worker_proc=0;
+uid=3004;
+
+http_ip=192.168.43.1;
+http_port=8080;
+http_del="X-Online-Host,Host";
+http_first="[M] http://[H][U] [V]\r\nHost: [H]\r\nConnection: Keep-Alive\r\n";
+
+https_connect=on;
+https_ip=192.168.43.1;
+https_port=8080;
+https_del="X-Online-Host,Host";
+https_first="[M] [H] [V]\r\nHost: [H]\r\n";
+
+dns_tcp=http; 
+dns_listen_port=65053; 
+dns_url="119.29.29.29";
+
+####注意 不开启pdnsd选项 端口为8088 开启后 8080

@@ -87,7 +87,7 @@ iptablesAndIp() {
     iptables -t mangle -A OUTPUT -m state --state INVALID -j DROP
     iptables -t mangle -A OUTPUT -p tcp -j ACCEPT
     iptables -t mangle -A OUTPUT -p udp --dport 53 -j ACCEPT
-    #放行网卡
+    #放行网卡!!!!!
     [ "$allowWifi" == '1' ] && iptables -t mangle -A OUTPUT -o wlan+ -j ACCEPT
     iptables -t mangle -A OUTPUT -o tun+ -j ACCEPT
     iptables -t mangle -A OUTPUT -o lo -j ACCEPT
@@ -150,7 +150,7 @@ statusCheck() {
 }
 
 clearServer() {
-    #关闭数据
+    #关闭数据（无需关闭数据，应将关闭数据的命令放在启动脚本，因为启动函数会调用此函数，导致数据关闭）
     #svc data disable
     #关闭程序
     ./clnc -k

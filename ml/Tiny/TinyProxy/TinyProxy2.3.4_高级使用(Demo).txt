@@ -1,6 +1,6 @@
 ﻿##如果玩网游 建议 ss跟gost都在国内服务器,这样会有不错的游戏体验
 
-#0 为本地模式 1 为Showsocks代理模式  
+#0 为本地模式 1 为Showsocks代理模式    只有设置vpn_mode=1 以下字段才会生效
 vpn_mode=0;
 
 #Showsocks服务器 IP(例 ↓)
@@ -18,8 +18,8 @@ ss_port=443;
 #Showsocks dns设置 是否转发 0 为服务器转发 1 为本地解析域名(本地解析域名,可以稍微提升加载速度)
 ss_remote_dns=0;
 
-#Showsocks dns设置 (例：114.114.114.114:53) (例 ↓)
-ss_dnsip=114.114.114.114:53;
+#Showsocks dns设置 多个以,分离(例：114.114.114.114:53) (例 ↓)
+ss_dnsip=114.114.114.114:53,8.8.8.8:53;
 
 #0 不转发，1 Gost转发Gost(免UDP)，2 原生转发(不免UDP)，3 Gost转发Shadowsocks(免UDP 需要Shadowsocks服务端支持)
 #Gost转发建议:国内Gost或SS服务器(国内DNS:114.114.114.114:53),国外Gost或SS服务器(国外DNS:8.8.8.8:53)

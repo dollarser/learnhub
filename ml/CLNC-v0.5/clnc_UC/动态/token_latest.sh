@@ -172,7 +172,7 @@ eval "`grep -v '^\;' ./config.ini`"
 #[ "$2" == 'start' ] && qdml
 #获取动态，重启clnc核心
 get_token
-restart_clnc
+[ "$cron" == 'on' ] && restart_clnc
 }
 
 main $0 $1 2>&1

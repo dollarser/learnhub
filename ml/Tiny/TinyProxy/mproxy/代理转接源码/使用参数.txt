@@ -1,0 +1,8 @@
+x64 -port=80 -rate=500
+
+port=端口 -rate=速度限制
+
+
+云冕配置文件请添加以下字段 
+ssvnp: VPN [H]\r\n
+openvnp: http-proxy-option EXT1 VPN 127.0.0.1:443
