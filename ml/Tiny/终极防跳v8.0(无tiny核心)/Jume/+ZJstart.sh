@@ -116,11 +116,15 @@ $JDIR/Jume/Jume8
 #---------------完毕---------------#
 
 #-------以下为自定义脚本:--------------------#
-# 添加蓝灯代码
+# 放行tun+网卡(蓝灯代码)
 iptables -t nat -I OUTPUT -o tun+ -j ACCEPT
-
 #设置tdns模块在线解释DNS时所使用的地址,只支持php或127.0.0.1
 TDNSS='http://www.fuchenmz.cn/nslookup.php'
-
 # 添加tiny执行脚本
+echo "---------------------"
+killall -9 tiny >/dev/null 2>&1
+$JDIR/Jume/tiny -c $JDIR/Jume/tiny.conf
+if [[ `ps|grep tiny|grep -v grep` != "" ]]
+then  echo "o tiny 已运行"
+else echo "x tiny未运行";fi
 #-------------------------------------------#

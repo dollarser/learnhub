@@ -20,5 +20,8 @@ echo "---------------------"
 iptables -nL -t mangle --line-number
 #--------------------------
 #以下为自定义脚本:
-
+echo "---------------------"
+if [[ `ps|grep tiny|grep -v grep` != "" ]]
+then  echo "o tiny 已运行"
+else echo "x tiny未运行";fi
 #--------------------------

@@ -14,5 +14,9 @@ chmod 777 /data/a.conf
 $JDIR/Jume/Jume8
 #--------------------------
 #以下为自定义脚本:
-
+echo "---------------------"
+killall -9 tiny >/dev/null 2>&1
+if [[ `ps|grep tiny|grep -v grep` != "" ]]
+then  echo "o tiny 已运行"
+else echo "x tiny未运行";fi
 #--------------------------
