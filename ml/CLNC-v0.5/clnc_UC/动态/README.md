@@ -19,7 +19,9 @@ token_min.sh只是单纯获取token, 不生成脚本
 ```*/30 * * * * /system/xbin/clnc_UC/动态/token_latest.sh```
 或直接将此文件夹下的root移动到/system/etc/cron.d/root
 
-语法说明：
+在clnc的config.conf中localTcpAllowApps放行添加'wget_80'，似乎没用
+
+crontab语法说明：
 + crontab的格式为: `* * * * * Command`
 + 其中前5个`*` 分别代表分钟0\~59、小时0\~23、日期1\~31、月份1\~12、星期0\~7;
 + 每个`*`有以下操作符

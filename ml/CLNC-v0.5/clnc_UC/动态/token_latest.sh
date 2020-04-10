@@ -26,7 +26,7 @@ temp=$(cat ./cache)
 if [ "$temp" != "" ];then
     echo "获取动态验证成功"
 else
-    echo "动态接口失效，请更换接口"
+    echo "网络未连接或动态接口失效，请关闭clnc或更换接口重试"
     exit 1;
 fi
 else
