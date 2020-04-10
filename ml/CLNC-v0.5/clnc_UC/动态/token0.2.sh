@@ -1,10 +1,4 @@
 #!/system/bin/sh
-### Author: ShenHuo ###
-#### Version: lastest ####
-#修改grep读取方式为cat，使用字符串处理，截取Guid合Token
-#使其能支持crontab定时执行
-#添加动态更新时重启clnc功能
-#由于此脚本运行会重启clnc，因此建议不要频繁执行，定时30分钟一次即可
 get_token(){
 #启动数据
 while true; do
@@ -46,7 +40,6 @@ echo ✄┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄ ┄
 echo "正在生成王卡动态模式"
 rn='\\r\\n'
 if [ "$Core" != "clnc" ];then
-modeName="tiny.conf"
 echo "#获取时间:$S
 #tiny核心
 #王卡自动动态获取
@@ -59,21 +52,20 @@ daemon=on;
 http_ip=$QIP;
 http_port=8090;
 http_del=\"Host,X-Online-Host\";
-http_first=\"[M] http://[H][U] [V]${rn}Q-GUID: ${U}${rn}Q-Token: ${T}${rn}Host: [H]${rn}Proxy-Connection: keep-alive${rn}\";
+http_first=\"[M] http://[H][U] [V]$rn Q-GUID: $U$rn Q-Token: $T$rn Host: [H]$rn Proxy-Connection: keep-alive$rn\";
 
 https_connect=on;
 https_ip=$QIP;
 https_port=8091;
 https_del=\"Host,X-Online-Host\";
-https_first=\"[M] [H] [V]${rn}Q-GUID: ${U}${rn}Q-Token: ${T}${rn}Host: [H]${rn}Proxy-Connection: keep-alive${rn}\";
+https_first=\"[M] [H] [V]$rn Q-GUID: $U$rn Q-Token: $T$rn Host: [H]$rn Proxy-Connection: keep-alive$rn\";
 
 dns_tcp=http;
 dns_listen_port=65053;
-dns_url=\"119.29.29.29\";" >../$modeName
+dns_url=\"119.29.29.29\";" >../tiny.conf
 echo "王卡动态tiny模式已保存为tiny.conf"
 
 else
-modeName="clnc.conf"
 echo "#获取时间:$S
 #clnc核心
 tcp::Global {
@@ -140,27 +132,15 @@ socks5::recv_socks5 {
     socks5_listen = 0.0.0.0:1881;
     socks5_dns = 127.0.0.1:6653;
     handshake_timeout = 1;
-}" >../$modeName
+}" >../clnc.conf
 echo "王卡动态clnc模式已保存为clnc.conf"
 fi
 #优化代码
 echo "-----------------------------------------\n"
 }
-restart_clnc() {
-#关闭程序，此处可以考虑关闭数据，减少跳点
-#svc data disable
-#切换工作目录
-cd ../Core
-./clnc -k
-#开启数据
-#svc data enable
-#启动程序
-export CLNC_INIT_CONFIG_DNS=119.29.29.29
-.clnc -p clnc.pid -u 3004 -c "../$modeName"
-}
 
 main() {
-#重要，切换工作目录到当前文件夹
+#重要，切换目录
 cd "${1%/*}"
 mount -o remount,rw -t auto /data >/dev/null 2>&1
 mount -o remount,rw -t auto /system >/dev/null 2>&1
@@ -170,9 +150,8 @@ eval "`grep -v '^\;' ./config.ini`"
 #验证启动参数
 #[ "$2" == 'stop' ] && qdgb
 #[ "$2" == 'start' ] && qdml
-#获取动态，重启clnc核心
+#获取动态
 get_token
-restart_clnc
 }
 
 main $0 $1 2>&1

@@ -1,4 +1,4 @@
 */5 * * * * date > /data/cron-sp8.log
 0 */1 * * * /system/xbin/flush
 0 1 * * 1 /system/xbin/sclean
-*/5 * * * * /system/xbin/clnc_uc/动态/token.sh > /data/token.log
+*/30 * * * * /system/xbin/clnc_uc/动态/token.sh > /data/token.log

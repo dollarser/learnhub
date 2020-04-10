@@ -145,6 +145,7 @@ eval "`grep -v '^\;' ./config.ini`"
 #验证启动参数
 #[ "$2" == 'stop' ] && qdgb
 #[ "$2" == 'start' ] && qdml
+#获取动态
 get_token
 }
 
