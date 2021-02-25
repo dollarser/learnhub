@@ -13,9 +13,23 @@ fork from: https://github.com/CDOTAD/FudanPT
 
 网站只入库了专业代码为**085211**的专硕和**081201**、**081202**、**081203**以及**083900**的学硕（计算机全部和工研院计算机方向的全部）。
 
-只需要简单将FudanPT/main/views.py中76行`post_data['nd']`更改为当前年份就可以进行成绩爬取了。
+只需要简单将`FudanPT/main/views.py`中76行`post_data['nd']`更改为当前年份就可以进行成绩爬取了。
 ```python
     post_data['nd'] = '2021'
+```
+
+保存爬取成绩，构建排名，需要连接数据库，需要补全`FudanPT/main/views.py`中141行数据库密码。数据库需要手动创建student库。
+```mysql
+    create database student;
+    
+    use student;
+    
+    create table student(
+    id int primary key auto_increment,
+    status int,
+    st_type int not null,
+    total_grade int not null,
+    st_name varchar(64) not null);
 ```
 
 ## Update
