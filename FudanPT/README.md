@@ -26,10 +26,9 @@ fork from: https://github.com/CDOTAD/FudanPT
     
     create table student(
     id int primary key auto_increment,
-    status int,
-    st_type int not null,
-    total_grade int not null,
-    st_name varchar(64) not null);
+    number varchar(64) not null,
+    type int not null,
+    grade int not null);
 ```
 
 ## Update
