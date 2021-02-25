@@ -122,7 +122,7 @@ def test_post(req):
                 #     student_type = 2
 
                 # 专硕
-                if '085211' in st_type:
+                if '085400' in st_type:
                     student_type = 0
                 # 学硕
                 elif '081201' in st_type or '081202' in st_type or '081203' in st_type or '083900' in st_type:
