@@ -13,9 +13,9 @@ fork from: https://github.com/CDOTAD/FudanPT
 
 网站只入库了专业代码为**085211**的专硕和**081201**、**081202**、**081203**以及**083900**的学硕（计算机全部和工研院计算机方向的全部）。
 
-只需要简单将`post_data['nd']`更改为当前年份就可以进行成绩爬取了。
+只需要简单将FudanPT/main/views.py中76行`post_data['nd']`更改为当前年份就可以进行成绩爬取了。
 ```python
-    post_data['nd'] = '2020'
+    post_data['nd'] = '2021'
 ```
 
 ## Update
