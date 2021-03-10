@@ -14,7 +14,7 @@ jobs:
 
     steps:
       # Checks out a copy of your repository on the ubuntu-latest machine
-      - name: Checkout code
+      - name: Checkout 下载数据
         uses: actions/checkout@v2
 
       # Runs the Super-Linter action
